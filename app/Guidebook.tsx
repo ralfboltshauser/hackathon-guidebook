@@ -3,7 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Check, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { guide, wins, type Phase } from "./guide";
+
+const WIN_PHOTOS = [
+  "/hackathon-proof/start-hack.jpg",
+  "/hackathon-proof/moin-hack.png",
+  "/hackathon-proof/eth-ai-hack.jpeg",
+  "/hackathon-proof/basel-hack.jpeg",
+  "/hackathon-proof/eth-agentic-systems-lab.jpeg",
+  "/hackathon-proof/ibm-bobathon.jpeg",
+];
 
 function scrollToPhase(i: number, smooth = true) {
   document
@@ -326,11 +336,13 @@ function Hero({
   onStart: () => void;
   onChecklists: () => void;
 }) {
+  const [activePhoto, setActivePhoto] = useState(0);
+
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-16">
-      <div className="grid gap-12 border-b border-[#241c12]/15 pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)] lg:items-center lg:gap-16 lg:pb-16">
+      <div className="grid gap-12 border-b border-[#241c12]/15 pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)] lg:items-start lg:gap-16 lg:pb-16">
         {/* Message */}
-        <div>
+        <div className="lg:pt-2">
           <p className="font-sans text-xs uppercase tracking-[0.35em] text-[#b4530a]">
             The hackathon playbook
           </p>
@@ -361,33 +373,78 @@ function Hero({
           </div>
         </div>
 
-        {/* Receipts */}
-        <div className="rounded-xl border border-[#241c12]/15 bg-white/40 p-6 shadow-sm sm:p-7">
-          <div className="flex items-baseline justify-between border-b border-[#241c12]/15 pb-4">
-            <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-[#8a6d3b]">
-              Track record
-            </p>
-            <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#241c12]/45">
-              2023 — 2025
-            </p>
-          </div>
-          <ul>
-            {wins.map((w) => (
-              <li key={w.event} className="border-b border-[#241c12]/10">
-                <WinItem
-                  href={w.href}
-                  className="group flex items-baseline justify-between gap-4 py-3.5"
-                >
-                  <span className="block text-lg leading-tight transition-colors group-hover:text-[#b4530a]">
-                    {w.event}
-                  </span>
-                  <span className="font-sans text-xs uppercase tracking-wider text-[#b4530a]">
-                    {w.place}
-                  </span>
-                </WinItem>
-              </li>
+        {/* Track record card with photo */}
+        <div className="overflow-hidden rounded-xl border border-[#241c12]/15 shadow-sm">
+          {/* Photo strip — crossfades on row hover */}
+          <div className="relative h-52 overflow-hidden bg-[#efe7d6] sm:h-60">
+            {WIN_PHOTOS.map((src, i) => (
+              <Image
+                key={src}
+                src={src}
+                alt={wins[i]?.event ?? ""}
+                fill
+                sizes="(max-width: 1024px) 100vw, 480px"
+                className={`object-cover object-center transition-opacity duration-500 ease-in-out ${
+                  activePhoto === i ? "opacity-100" : "opacity-0"
+                }`}
+                priority={i === 0}
+              />
             ))}
-          </ul>
+            {/* Gradient blending photo into card */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#f6f1e7] to-transparent" />
+            {/* Subtle event label */}
+            <div className="absolute bottom-3 left-5 z-10 h-4">
+              {wins.map((w, i) => (
+                <span
+                  key={w.event}
+                  className={`absolute bottom-0 left-0 whitespace-nowrap font-sans text-[10px] uppercase tracking-[0.22em] text-[#241c12]/55 transition-opacity duration-500 ${
+                    activePhoto === i ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  {w.event}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Track record list */}
+          <div className="bg-white/40 px-6 pb-6 pt-2 sm:px-7 sm:pb-7">
+            <div className="flex items-baseline justify-between border-b border-[#241c12]/15 pb-3">
+              <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-[#8a6d3b]">
+                Track record
+              </p>
+              <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#241c12]/45">
+                2023 — 2025
+              </p>
+            </div>
+            <ul>
+              {wins.map((w, i) => (
+                <li
+                  key={w.event}
+                  onMouseEnter={() => setActivePhoto(i)}
+                  className="border-b border-[#241c12]/10 last:border-0"
+                >
+                  <WinItem
+                    href={w.href}
+                    className="group flex items-baseline justify-between gap-4 py-3"
+                  >
+                    <span
+                      className={`block text-base leading-tight transition-colors duration-200 ${
+                        activePhoto === i
+                          ? "text-[#b4530a]"
+                          : "group-hover:text-[#b4530a]"
+                      }`}
+                    >
+                      {w.event}
+                    </span>
+                    <span className="flex-shrink-0 font-sans text-xs uppercase tracking-wider text-[#b4530a]">
+                      {w.place}
+                    </span>
+                  </WinItem>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
