@@ -40,7 +40,7 @@ export const wins: Win[] = [
     place: "Winner",
   },
   {
-    event: "Mannheim Hackathon",
+    event: "Q-Summit Hackathon",
     place: "Winner",
   },
 ];
