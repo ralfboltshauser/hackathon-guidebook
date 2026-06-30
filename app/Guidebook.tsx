@@ -120,13 +120,6 @@ export function Guidebook() {
                 Konrad te Heesen
               </a>
             </span>
-            <span className="font-sans text-[11px] text-[#241c12]/25">·</span>
-            <Link
-              href="/about"
-              className="font-sans text-[11px] text-[#241c12]/38 underline-offset-4 transition-colors hover:text-[#241c12]/65 hover:underline"
-            >
-              About
-            </Link>
           </div>
 
           <div className="flex items-center justify-between gap-3 lg:justify-end">
@@ -148,54 +141,72 @@ export function Guidebook() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl overflow-x-auto px-4 pb-2 sm:px-6">
-          <ol className="flex min-w-max gap-1">
-            {guide.map((p, i) => {
-              const active = i === phaseIdx;
-              const complete = phaseComplete(i, done, customTodos);
-              return (
-                <li key={p.n} className="flex-shrink-0">
-                  <button
-                    onClick={() => {
-                      setPhaseIdx(i);
-                      if (mode === "learn") {
-                        setPendingScrollPhase(i);
-                        scrollToPhase(i);
-                      }
-                    }}
-                    className={`group relative flex items-baseline gap-2 rounded-md px-3 py-1.5 transition-colors ${
-                      active ? "text-[#f6f1e7]" : "hover:bg-[#241c12]/5"
-                    }`}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="phase-tab-indicator"
-                        className="absolute inset-0 rounded-md bg-[#241c12]"
-                        transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                      />
-                    )}
-                    <span
-                      className={`relative z-10 font-sans text-[10px] tabular-nums ${
-                        active ? "text-[#f6f1e7]/60" : "text-[#241c12]/40"
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 pb-2 sm:px-6">
+          <div className="min-w-0 overflow-x-auto">
+            <ol className="flex min-w-max gap-1">
+              {guide.map((p, i) => {
+                const active = i === phaseIdx;
+                const complete = phaseComplete(i, done, customTodos);
+                return (
+                  <li key={p.n} className="flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        setPhaseIdx(i);
+                        if (mode === "learn") {
+                          setPendingScrollPhase(i);
+                          scrollToPhase(i);
+                        }
+                      }}
+                      className={`group relative flex items-baseline gap-2 rounded-md px-3 py-1.5 transition-colors ${
+                        active ? "text-[#f6f1e7]" : "hover:bg-[#241c12]/5"
                       }`}
                     >
-                      {p.n}
-                    </span>
-                    <span className="relative z-10 text-sm">{p.title}</span>
-                    {complete && (
+                      {active && (
+                        <motion.span
+                          layoutId="phase-tab-indicator"
+                          className="absolute inset-0 rounded-md bg-[#241c12]"
+                          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                        />
+                      )}
                       <span
-                        className={`relative z-10 font-sans text-xs ${
-                          active ? "text-[#f6f1e7]" : "text-[#b4530a]"
+                        className={`relative z-10 font-sans text-[10px] tabular-nums ${
+                          active ? "text-[#f6f1e7]/60" : "text-[#241c12]/40"
                         }`}
                       >
-                        done
+                        {p.n}
                       </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
+                      <span className="relative z-10 text-sm">{p.title}</span>
+                      {complete && (
+                        <span
+                          className={`relative z-10 font-sans text-xs ${
+                            active ? "text-[#f6f1e7]" : "text-[#b4530a]"
+                          }`}
+                        >
+                          done
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+          <nav className="flex flex-shrink-0 items-center gap-3 font-sans text-[11px] text-[#241c12]/42">
+            <Link
+              href="/about"
+              className="underline-offset-4 transition-colors hover:text-[#241c12]/70 hover:underline"
+            >
+              About
+            </Link>
+            <a
+              href="https://github.com/ralfboltshauser/hackathon-guidebook"
+              target="_blank"
+              rel="noreferrer"
+              className="underline-offset-4 transition-colors hover:text-[#241c12]/70 hover:underline"
+            >
+              GitHub
+            </a>
+          </nav>
         </div>
       </div>
 
