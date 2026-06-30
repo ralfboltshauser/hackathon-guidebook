@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Check, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { AlertTriangle, Check, Plus, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import {
+  checklistGroupKey,
+  customCheckKey,
+  staticCheckKey,
+  useChecklistStore,
+  type CustomTodo,
+} from "./checklist-store";
 import { guide, wins, type Phase } from "./guide";
 
 const WIN_PHOTOS = [
@@ -22,66 +29,49 @@ function scrollToPhase(i: number, smooth = true) {
 }
 
 type Mode = "learn" | "hack";
-const CHECKLIST_STORAGE_KEY = "good-boys-hackathon-guide:checklist:v1";
 
 const itemCount = (p: Phase) =>
   p.checklists.reduce((s, c) => s + c.items.length, 0);
 
-const phaseComplete = (pi: number, done: Record<string, boolean>) =>
-  guide[pi].checklists.every((c, gi) =>
-    c.items.every((_, ii) => done[`${pi}:${gi}:${ii}`]),
-  );
-
 const totalChecks = guide.reduce((sum, phase) => sum + itemCount(phase), 0);
-const validChecklistKeys = new Set(
-  guide.flatMap((phase, pi) =>
-    phase.checklists.flatMap((group, gi) =>
-      group.items.map((_, ii) => `${pi}:${gi}:${ii}`),
-    ),
-  ),
-);
 
-function loadStoredChecklistState(): Record<string, boolean> {
-  if (typeof window === "undefined") {
-    return {};
-  }
+const phaseComplete = (
+  phaseIdx: number,
+  done: Record<string, boolean>,
+  customTodos: Record<string, CustomTodo[]>,
+) =>
+  guide[phaseIdx].checklists.every((group, groupIdx) => {
+    const builtInComplete = group.items.every(
+      (_, itemIdx) => done[staticCheckKey(phaseIdx, groupIdx, itemIdx)],
+    );
+    const customComplete = (customTodos[checklistGroupKey(phaseIdx, groupIdx)] ?? [])
+      .every((todo) => done[customCheckKey(todo.id)]);
 
-  try {
-    const raw = window.localStorage.getItem(CHECKLIST_STORAGE_KEY);
-    if (!raw) {
-      return {};
-    }
+    return builtInComplete && customComplete;
+  });
 
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return {};
-    }
-
-    return Object.fromEntries(
-      Object.entries(parsed).filter(
-        ([key, value]) => validChecklistKeys.has(key) && typeof value === "boolean",
-      ),
-    ) as Record<string, boolean>;
-  } catch {
-    return {};
-  }
-}
+const customTodoCount = (customTodos: Record<string, CustomTodo[]>) =>
+  Object.values(customTodos).reduce((sum, todos) => sum + todos.length, 0);
 
 export function Guidebook() {
   const [mode, setMode] = useState<Mode>("learn");
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [pendingScrollPhase, setPendingScrollPhase] = useState<number | null>(null);
-  const [done, setDone] = useState<Record<string, boolean>>(loadStoredChecklistState);
-
+  const done = useChecklistStore((state) => state.done);
+  const customTodos = useChecklistStore((state) => state.customTodos);
+  const toggleCheck = useChecklistStore((state) => state.toggleCheck);
+  const addCustomTodo = useChecklistStore((state) => state.addCustomTodo);
+  const removeCustomTodo = useChecklistStore((state) => state.removeCustomTodo);
+  const resetProgress = useChecklistStore((state) => state.resetProgress);
+  const resetProgressAndCustomTodos = useChecklistStore(
+    (state) => state.resetProgressAndCustomTodos,
+  );
+  const migrateLegacyProgress = useChecklistStore(
+    (state) => state.migrateLegacyProgress,
+  );
   const allDone = Object.values(done).filter(Boolean).length;
+  const allChecks = totalChecks + customTodoCount(customTodos);
 
-  const toggle = (gi: number, ii: number) =>
-    setDone((d) => ({
-      ...d,
-      [`${phaseIdx}:${gi}:${ii}`]: !d[`${phaseIdx}:${gi}:${ii}`],
-    }));
-
-  const resetAllChecklists = () => setDone({});
   const enterHackMode = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     setMode("hack");
@@ -92,12 +82,8 @@ export function Guidebook() {
   };
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(done));
-    } catch {
-      // Keep the checklist usable even if storage is unavailable.
-    }
-  }, [done]);
+    migrateLegacyProgress();
+  }, [migrateLegacyProgress]);
 
   return (
     <div className="min-h-screen bg-[#f6f1e7] font-serif text-[#241c12]">
@@ -158,7 +144,7 @@ export function Guidebook() {
           <ol className="flex min-w-max gap-1">
             {guide.map((p, i) => {
               const active = i === phaseIdx;
-              const complete = phaseComplete(i, done);
+              const complete = phaseComplete(i, done, customTodos);
               return (
                 <li key={p.n} className="flex-shrink-0">
                   <button
@@ -220,9 +206,14 @@ export function Guidebook() {
         <HackView
           phaseIdx={phaseIdx}
           done={done}
+          customTodos={customTodos}
           totalDone={allDone}
-          onToggle={toggle}
-          onResetAll={resetAllChecklists}
+          totalChecks={allChecks}
+          onToggle={toggleCheck}
+          onAddCustomTodo={addCustomTodo}
+          onRemoveCustomTodo={removeCustomTodo}
+          onResetProgress={resetProgress}
+          onResetProgressAndCustomTodos={resetProgressAndCustomTodos}
           onRead={enterLearnMode}
           onPrev={() => setPhaseIdx((i) => Math.max(0, i - 1))}
           onNext={() => setPhaseIdx((i) => Math.min(guide.length - 1, i + 1))}
@@ -637,29 +628,48 @@ function PhaseArticle({
 function HackView({
   phaseIdx,
   done,
+  customTodos,
   totalDone,
+  totalChecks,
   onToggle,
-  onResetAll,
+  onAddCustomTodo,
+  onRemoveCustomTodo,
+  onResetProgress,
+  onResetProgressAndCustomTodos,
   onRead,
   onPrev,
   onNext,
 }: {
   phaseIdx: number;
   done: Record<string, boolean>;
+  customTodos: Record<string, CustomTodo[]>;
   totalDone: number;
-  onToggle: (gi: number, ii: number) => void;
-  onResetAll: () => void;
+  totalChecks: number;
+  onToggle: (key: string) => void;
+  onAddCustomTodo: (groupKey: string, label: string) => void;
+  onRemoveCustomTodo: (groupKey: string, todoId: string) => void;
+  onResetProgress: () => void;
+  onResetProgressAndCustomTodos: () => void;
   onRead: () => void;
   onPrev: () => void;
   onNext: () => void;
 }) {
   const [resetOpen, setResetOpen] = useState(false);
   const phase = guide[phaseIdx];
-  const total = phase.checklists.reduce((s, c) => s + c.items.length, 0);
-  const complete = phase.checklists.reduce(
-    (s, c, gi) => s + c.items.filter((_, ii) => done[`${phaseIdx}:${gi}:${ii}`]).length,
-    0,
+  const phaseCustomTodos = phase.checklists.flatMap(
+    (_, groupIdx) => customTodos[checklistGroupKey(phaseIdx, groupIdx)] ?? [],
   );
+  const customCount = customTodoCount(customTodos);
+  const total = itemCount(phase) + phaseCustomTodos.length;
+  const complete = phase.checklists.reduce((sum, group, groupIdx) => {
+    const builtInDone = group.items.filter((_, itemIdx) =>
+      done[staticCheckKey(phaseIdx, groupIdx, itemIdx)],
+    ).length;
+    const customDone = (customTodos[checklistGroupKey(phaseIdx, groupIdx)] ?? [])
+      .filter((todo) => done[customCheckKey(todo.id)]).length;
+
+    return sum + builtInDone + customDone;
+  }, 0);
   const pct = Math.round((complete / total) * 100);
 
   return (
@@ -700,10 +710,16 @@ function HackView({
 
         <div className="mt-10 space-y-9">
           {phase.checklists.map((group, gi) => {
-            const gDone = group.items.filter(
-              (_, ii) => done[`${phaseIdx}:${gi}:${ii}`],
-            ).length;
-            const gAll = gDone === group.items.length;
+            const groupKey = checklistGroupKey(phaseIdx, gi);
+            const groupCustomTodos = customTodos[groupKey] ?? [];
+            const groupTotal = group.items.length + groupCustomTodos.length;
+            const gDone =
+              group.items.filter((_, ii) =>
+                done[staticCheckKey(phaseIdx, gi, ii)],
+              ).length +
+              groupCustomTodos.filter((todo) => done[customCheckKey(todo.id)])
+                .length;
+            const gAll = groupTotal > 0 && gDone === groupTotal;
             return (
               <section key={group.title}>
                 <div className="flex items-baseline justify-between border-b border-[#241c12]/15 pb-2">
@@ -715,16 +731,17 @@ function HackView({
                       gAll ? "text-[#b4530a]" : "text-[#241c12]/40"
                     }`}
                   >
-                    {gAll ? "done" : `${gDone}/${group.items.length}`}
+                    {gAll ? "done" : `${gDone}/${groupTotal}`}
                   </span>
                 </div>
                 <ul className="mt-3 space-y-2">
                   {group.items.map((item, ii) => {
-                    const checked = !!done[`${phaseIdx}:${gi}:${ii}`];
+                    const itemKey = staticCheckKey(phaseIdx, gi, ii);
+                    const checked = !!done[itemKey];
                     return (
                       <li key={item.label}>
                         <button
-                          onClick={() => onToggle(gi, ii)}
+                          onClick={() => onToggle(itemKey)}
                           className={`flex w-full items-center gap-4 rounded-md border px-4 py-4 text-left transition-colors sm:px-5 ${
                             checked
                               ? "border-[#b4530a]/20 bg-[#f3ecdf]"
@@ -758,7 +775,64 @@ function HackView({
                       </li>
                     );
                   })}
+                  {groupCustomTodos.map((todo) => {
+                    const itemKey = customCheckKey(todo.id);
+                    const checked = !!done[itemKey];
+
+                    return (
+                      <li key={todo.id}>
+                        <div
+                          className={`flex items-center gap-2 rounded-md border px-4 py-3 transition-colors sm:px-5 ${
+                            checked
+                              ? "border-[#b4530a]/20 bg-[#f3ecdf]"
+                              : "border-[#241c12]/15 bg-white/40 hover:border-[#241c12]/30 hover:bg-white/55"
+                          }`}
+                        >
+                          <button
+                            onClick={() => onToggle(itemKey)}
+                            className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                          >
+                            <span
+                              className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors ${
+                                checked
+                                  ? "border-[#b4530a] bg-[#b4530a] text-[#f6f1e7]"
+                                  : "border-[#241c12]/30 bg-[#f6f1e7]/70"
+                              }`}
+                            >
+                              {checked && (
+                                <Check aria-hidden="true" size={15} strokeWidth={3} />
+                              )}
+                            </span>
+                            <span
+                              className={`min-w-0 flex-1 font-sans text-[15px] leading-6 ${
+                                checked
+                                  ? "text-[#241c12]/55"
+                                  : "text-[#241c12]"
+                              }`}
+                            >
+                              {todo.label}
+                            </span>
+                            <span className="hidden flex-shrink-0 font-sans text-[10px] uppercase tracking-wider text-[#241c12]/35 sm:block">
+                              custom
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => onRemoveCustomTodo(groupKey, todo.id)}
+                            aria-label={`Remove custom todo: ${todo.label}`}
+                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-[#241c12]/38 transition-colors hover:bg-[#241c12]/7 hover:text-[#b4530a]"
+                          >
+                            <X aria-hidden="true" size={16} />
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
+                <AddCustomTodoForm
+                  inputId={`custom-todo-${groupKey}`}
+                  groupTitle={group.title}
+                  onAdd={(label) => onAddCustomTodo(groupKey, label)}
+                />
               </section>
             );
           })}
@@ -794,11 +868,11 @@ function HackView({
             </div>
             <button
               onClick={() => setResetOpen(true)}
-              disabled={totalDone === 0}
+              disabled={totalDone === 0 && customCount === 0}
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#241c12]/15 px-3 py-2.5 font-sans text-sm text-[#241c12]/65 transition-colors hover:border-[#b4530a]/45 hover:text-[#b4530a] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#241c12]/15 disabled:hover:text-[#241c12]/65"
             >
               <Trash2 aria-hidden="true" size={15} />
-              Reset checklist
+              Clear checklist state
             </button>
           </section>
         </div>
@@ -807,9 +881,14 @@ function HackView({
       {resetOpen && (
         <ResetChecklistDialog
           completedCount={totalDone}
+          customTodoCount={customCount}
           onCancel={() => setResetOpen(false)}
-          onConfirm={() => {
-            onResetAll();
+          onResetProgress={() => {
+            onResetProgress();
+            setResetOpen(false);
+          }}
+          onResetProgressAndCustomTodos={() => {
+            onResetProgressAndCustomTodos();
             setResetOpen(false);
           }}
         />
@@ -818,15 +897,74 @@ function HackView({
   );
 }
 
+function AddCustomTodoForm({
+  inputId,
+  groupTitle,
+  onAdd,
+}: {
+  inputId: string;
+  groupTitle: string;
+  onAdd: (label: string) => void;
+}) {
+  const [label, setLabel] = useState("");
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const cleanLabel = label.trim();
+    if (!cleanLabel) {
+      return;
+    }
+
+    onAdd(cleanLabel);
+    setLabel("");
+  };
+
+  return (
+    <form
+      onSubmit={submit}
+      className="mt-3 flex flex-col gap-2 rounded-md border border-dashed border-[#241c12]/18 bg-[#efe7d6]/45 p-3 sm:flex-row"
+    >
+      <label className="sr-only" htmlFor={inputId}>
+        Add your own check to {groupTitle}
+      </label>
+      <input
+        id={inputId}
+        value={label}
+        onChange={(event) => setLabel(event.target.value)}
+        placeholder="Add your own check for this group"
+        maxLength={180}
+        className="min-h-10 flex-1 rounded-md border border-[#241c12]/15 bg-white/45 px-3 font-sans text-sm text-[#241c12] outline-none transition-colors placeholder:text-[#241c12]/38 focus:border-[#b4530a]/65 focus:bg-white/65"
+      />
+      <button
+        type="submit"
+        disabled={label.trim().length === 0}
+        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#241c12] px-4 font-sans text-sm font-medium text-[#f6f1e7] transition-colors hover:bg-[#3a2c1c] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-[#241c12]"
+      >
+        <Plus aria-hidden="true" size={15} />
+        Add
+      </button>
+    </form>
+  );
+}
+
 function ResetChecklistDialog({
   completedCount,
+  customTodoCount,
   onCancel,
-  onConfirm,
+  onResetProgress,
+  onResetProgressAndCustomTodos,
 }: {
   completedCount: number;
+  customTodoCount: number;
   onCancel: () => void;
-  onConfirm: () => void;
+  onResetProgress: () => void;
+  onResetProgressAndCustomTodos: () => void;
 }) {
+  const progressLabel =
+    completedCount === 1 ? "1 completed check" : `${completedCount} completed checks`;
+  const customLabel =
+    customTodoCount === 1 ? "1 custom todo" : `${customTodoCount} custom todos`;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#241c12]/35 px-4 backdrop-blur-sm"
@@ -841,11 +979,22 @@ function ResetChecklistDialog({
           </span>
           <div>
             <h2 id="reset-checklist-title" className="font-sans text-lg font-medium">
-              Reset all checklist progress?
+              Clear checklist state?
             </h2>
             <p className="mt-2 font-sans text-sm leading-6 text-[#241c12]/68">
-              This will clear {completedCount} completed checks from this browser. The guide content stays unchanged.
+              Choose exactly what to clear in this browser. Built-in guide checks
+              stay in the guide either way.
             </p>
+            <dl className="mt-4 grid gap-2 font-sans text-xs text-[#241c12]/58">
+              <div className="flex justify-between gap-4 rounded-md bg-white/35 px-3 py-2">
+                <dt>Completed progress</dt>
+                <dd className="tabular-nums">{progressLabel}</dd>
+              </div>
+              <div className="flex justify-between gap-4 rounded-md bg-white/35 px-3 py-2">
+                <dt>Your added todos</dt>
+                <dd className="tabular-nums">{customLabel}</dd>
+              </div>
+            </dl>
           </div>
         </div>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -853,13 +1002,21 @@ function ResetChecklistDialog({
             onClick={onCancel}
             className="rounded-md border border-[#241c12]/15 px-4 py-2.5 font-sans text-sm text-[#241c12]/70 transition-colors hover:bg-[#241c12]/5"
           >
-            Keep progress
+            Keep everything
           </button>
           <button
-            onClick={onConfirm}
-            className="rounded-md bg-[#b4530a] px-4 py-2.5 font-sans text-sm font-medium text-[#f6f1e7] transition-colors hover:bg-[#8f3f08]"
+            onClick={onResetProgress}
+            disabled={completedCount === 0}
+            className="rounded-md border border-[#241c12]/15 px-4 py-2.5 font-sans text-sm text-[#241c12]/70 transition-colors hover:border-[#b4530a]/45 hover:text-[#b4530a] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#241c12]/15 disabled:hover:text-[#241c12]/70"
           >
-            Reset everything
+            Clear completed checks only
+          </button>
+          <button
+            onClick={onResetProgressAndCustomTodos}
+            disabled={completedCount === 0 && customTodoCount === 0}
+            className="rounded-md bg-[#b4530a] px-4 py-2.5 font-sans text-sm font-medium text-[#f6f1e7] transition-colors hover:bg-[#8f3f08] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-[#b4530a]"
+          >
+            Clear checks and custom todos
           </button>
         </div>
       </div>
