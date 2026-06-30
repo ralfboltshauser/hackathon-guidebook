@@ -93,15 +93,28 @@ export function Guidebook() {
     <div className="min-h-screen bg-[#f6f1e7] font-serif text-[#241c12]">
       <div className="sticky top-0 z-30 border-b border-[#241c12]/15 bg-[#f6f1e7]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-          <button
-            onClick={() => {
-              setPhaseIdx(0);
-              enterLearnMode();
-            }}
-            className="w-fit text-left font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b] transition-colors hover:text-[#241c12]"
-          >
-            Good Boys Hackathon Guide
-          </button>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <button
+              onClick={() => {
+                setPhaseIdx(0);
+                enterLearnMode();
+              }}
+              className="w-fit text-left font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b] transition-colors hover:text-[#241c12]"
+            >
+              Good Boys Hackathon Guide
+            </button>
+            <span className="font-sans text-[11px] text-[#241c12]/45">
+              by{" "}
+              <a
+                href="https://www.linkedin.com/in/ralfboltshauser/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#b4530a] underline-offset-4 transition-colors hover:text-[#241c12] hover:underline"
+              >
+                Ralf Boltshauser
+              </a>
+            </span>
+          </div>
 
           <div className="flex items-center justify-between gap-3 lg:justify-end">
             <div className="hidden font-sans text-xs text-[#241c12]/50 sm:block">
