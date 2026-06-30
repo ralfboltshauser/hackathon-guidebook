@@ -396,6 +396,7 @@ function Hero({
                 src={src}
                 alt={wins[i]?.event ?? ""}
                 fill
+                unoptimized
                 sizes="(max-width: 1024px) 100vw, 480px"
                 className={`object-cover object-center transition-opacity duration-500 ease-in-out ${
                   activePhoto === i ? "opacity-100" : "opacity-0"

@@ -504,7 +504,7 @@ export async function proxy(request: NextRequest) {
       return lockedPage(nextPath, { passwordError: true });
     }
 
-    const response = NextResponse.redirect(new URL(nextPath, request.url));
+    const response = NextResponse.redirect(new URL(nextPath, request.url), 303);
     const isSecureRequest =
       request.nextUrl.protocol === "https:" ||
       request.headers.get("x-forwarded-proto") === "https";
