@@ -14,12 +14,12 @@ const atkinson = Atkinson_Hyperlegible({
 export const metadata: Metadata = {
   metadataBase: new URL("https://hackathons.ralfboltshauser.com"),
   title: {
-    default: "GoodBoys Hackathon GuideBook",
-    template: "%s | GoodBoys Hackathon GuideBook",
+    default: "Hackathon Guidebook",
+    template: "%s | Hackathon Guidebook",
   },
   description:
     "A field-tested playbook and checklist for running hackathons with a win-oriented team.",
-  applicationName: "GoodBoys Hackathon GuideBook",
+  applicationName: "Hackathon Guidebook",
   authors: [{ name: "Ralf Boltshauser", url: "https://ralfboltshauser.com" }],
   creator: "Ralf Boltshauser",
   publisher: "Ralf Boltshauser",
@@ -27,11 +27,11 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "GoodBoys Hackathon GuideBook",
+    title: "Hackathon Guidebook",
     description:
       "A field-tested playbook and checklist for running hackathons with a win-oriented team.",
     url: "/",
-    siteName: "GoodBoys Hackathon GuideBook",
+    siteName: "Hackathon Guidebook",
     type: "website",
     locale: "en_US",
     images: [
@@ -39,13 +39,13 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "GoodBoys Hackathon GuideBook",
+        alt: "Hackathon Guidebook",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "GoodBoys Hackathon GuideBook",
+    title: "Hackathon Guidebook",
     description:
       "A field-tested playbook and checklist for running hackathons with a win-oriented team.",
     images: ["/twitter-image"],

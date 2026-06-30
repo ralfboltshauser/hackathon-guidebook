@@ -52,7 +52,7 @@ function lockedPage(
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow, noarchive, noimageindex, nosnippet" />
-    <title>Good Boys Hackathon Guide</title>
+    <title>Hackathon Guidebook</title>
     <style>
       :root {
         color-scheme: light;
@@ -282,7 +282,7 @@ function lockedPage(
   <body>
     <div class="page">
       <header>
-        <div class="brand">Good Boys Hackathon Guide</div>
+        <div class="brand">Hackathon Guidebook</div>
         <div class="byline">by <a href="https://www.linkedin.com/in/ralfboltshauser/">Ralf Boltshauser</a></div>
       </header>
 
@@ -433,7 +433,7 @@ async function sendAccessRequest(email: string, request: NextRequest) {
       "Content-Type": "text/plain; charset=utf-8",
     },
     body: [
-      "New access request for Good Boys Hackathon Guide.",
+      "New access request for Hackathon Guidebook.",
       `Email: ${email}`,
       `IP: ${ip}`,
       `User-Agent: ${userAgent}`,

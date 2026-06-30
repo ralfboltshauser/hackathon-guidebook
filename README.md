@@ -1,4 +1,4 @@
-# Good Boys Hackathon Guide
+# Hackathon Guidebook
 
 A private, field-tested hackathon guidebook for teams that want to compete seriously.
 

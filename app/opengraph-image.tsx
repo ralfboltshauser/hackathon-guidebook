@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "GoodBoys Hackathon GuideBook";
+export const alt = "Hackathon Guidebook";
 export const size = {
   width: 1200,
   height: 630,
@@ -33,28 +33,10 @@ export default function Image() {
         >
           <div
             style={{
-              fontSize: 150,
+              fontSize: 118,
               lineHeight: 1,
               letterSpacing: -4,
               fontWeight: 500,
-            }}
-          >
-            GoodBoys
-          </div>
-          <div
-            style={{
-              width: 180,
-              height: 4,
-              background: "#b4530a",
-              borderRadius: 999,
-            }}
-          />
-          <div
-            style={{
-              fontSize: 34,
-              letterSpacing: 7,
-              textTransform: "uppercase",
-              color: "#8a6d3b",
             }}
           >
             Hackathon Guidebook

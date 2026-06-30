@@ -111,7 +111,7 @@ export function Guidebook() {
               }}
               className="w-fit text-left font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b] transition-colors hover:text-[#241c12]"
             >
-              Good Boys Hackathon Guide
+              Hackathon Guidebook
             </button>
             <span className="font-sans text-[11px] text-[#241c12]/38">
               by{" "}
