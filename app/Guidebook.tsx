@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AlertTriangle, Check, Plus, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import {
   checklistGroupKey,
   customCheckKey,
@@ -119,6 +120,13 @@ export function Guidebook() {
                 Konrad te Heesen
               </a>
             </span>
+            <span className="font-sans text-[11px] text-[#241c12]/25">·</span>
+            <Link
+              href="/about"
+              className="font-sans text-[11px] text-[#241c12]/38 underline-offset-4 transition-colors hover:text-[#241c12]/65 hover:underline"
+            >
+              About
+            </Link>
           </div>
 
           <div className="flex items-center justify-between gap-3 lg:justify-end">
