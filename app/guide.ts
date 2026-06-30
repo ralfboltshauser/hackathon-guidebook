@@ -39,6 +39,10 @@ export const wins: Win[] = [
     event: "IBM Bobathon",
     place: "Winner",
   },
+  {
+    event: "Mannheim Hackathon",
+    place: "Winner",
+  },
 ];
 
 export type Phase = {

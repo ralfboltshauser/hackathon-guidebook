@@ -21,6 +21,7 @@ const WIN_PHOTOS = [
   "/hackathon-proof/basel-hack.jpeg",
   "/hackathon-proof/eth-agentic-systems-lab.jpeg",
   "/hackathon-proof/ibm-bobathon.jpeg",
+  "/hackathon-proof/konrad-hack-team.jpeg",
 ];
 
 function scrollToPhase(i: number, smooth = true) {
