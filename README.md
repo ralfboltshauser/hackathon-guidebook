@@ -1,6 +1,6 @@
 # Hackathon Guidebook
 
-[hackathons.ralfboltshauser.com](https://hackathons.ralfboltshauser.com)
+[hackathon-guidebook.com](https://www.hackathon-guidebook.com)
 
 We've won at Start Hack, ETH AI Hack, BaselHack, Moin Hack, ETH Agentic Systems Hack, and IBM Bobathon. CHF 10k+ in prizes over the last few years. This is the system behind it.
 
