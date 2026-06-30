@@ -24,13 +24,6 @@ During: keep the Hack tab open and work through the checklists. Every step you s
 
 ## Who this is from
 
-Written by [Ralf Boltshauser](https://www.linkedin.com/in/ralfboltshauser/) with learnings from Samuel Baumgartner, Marco Pagano, and Lionel Ding.
+Written by [Ralf Boltshauser](https://www.linkedin.com/in/ralfboltshauser/) with experiences from Samuel Baumgartner, Marco Pagano, and Lionel Ding.
 
 Konrad te Heesen, Lukas Strickler, Marco Ginanesini, and Franz Dieter extended it with their own experience and point of view.
-
----
-
-```bash
-pnpm install
-SITE_PASSWORD=your-password pnpm dev
-```
