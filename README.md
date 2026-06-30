@@ -1,4 +1,4 @@
-# Good Boys Hackathon Guide
+# Hackathon Guidebook
 
 [hackathons.ralfboltshauser.com](https://hackathons.ralfboltshauser.com)
 
