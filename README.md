@@ -1,42 +1,32 @@
 # Good Boys Hackathon Guide
 
-Everything we learned winning hackathons. Not theory. Not a highlight reel. The repeatable system behind real prize money.
+[hackathons.ralfboltshauser.com](https://hackathons.ralfboltshauser.com)
 
-→ **[hackathons.ralfboltshauser.com](https://hackathons.ralfboltshauser.com)**
+We've competed in hackathons across Europe for a few years, won CHF 10k+ in prizes, and figured out what actually separates teams that win from teams that don't. This is what we use.
 
----
+## What this is
 
-## What This Is
+Six phases: Before, Start, During, Final Hours, Pitch, After.
 
-We have spent years competing at hackathons across Europe — winning CHF 10k+ in prizes, losing for the right reasons, and running the same experiment over and over: what actually determines who wins?
+Each phase has a guide (Learn tab) and a checklist (Hack tab). Read the guide before you arrive. Use the checklist during the event.
 
-The answer is not who codes the fastest. It is who reads the room, picks the right challenge, discovers the real problem behind the brief, builds only what gets shown in the pitch, and delivers a story that makes the jury want them to win.
+## Who this is for
 
-This guidebook captures those patterns across six phases: **Before**, **Start**, **During**, **Final Hours**, **Pitch**, and **After**. Every single step you skip decreases your odds.
+Anyone who wants to win, first hackathon or tenth. If you're there to explore, network, or just build something fun, this is probably overkill.
 
-## Who This Is For
+## How to use it
 
-Anyone who wants to win hackathons.
+Before: read through the Learn tab. All six phases. Understand what matters and why.
 
-First-timers who want to avoid the obvious traps. Experienced teams who want to tighten their execution and stop losing to avoidable mistakes. Hackathon organizers who want to understand what strong teams actually do differently.
+During: switch to the Hack tab and work through the checklists. Every step you skip lowers your odds.
 
-If you are joining for the fun, the networking, or the free food — fair enough, this is not for you.
+## Who this is from
 
-## How To Use It
+Written by [Ralf Boltshauser](https://www.linkedin.com/in/ralfboltshauser/) with learnings from Samuel Baumgartner, Marco Pagano, and Lionel Ding.
 
-**Before the hackathon** — read the **Learn** tab. Work through all six phases. Understand the approach, the field rules, and the things that consistently decide the result. Do this before you arrive, not during.
-
-**During the hackathon** — switch to the **Hack** tab. Use the checklists phase by phase. Do not let time pressure, caffeine, and feature creep make you forget the basics.
-
-## Who This Is From
-
-The guidebook was written by [Ralf Boltshauser](https://www.linkedin.com/in/ralfboltshauser/), drawing on shared learnings from Samuel Baumgartner, Marco Pagano, and Lionel Ding across multiple hackathons together.
-
-Konrad te Heesen, Lukas Strickler, Marco Ginanesini, and Franz Dieter then extended it with their own experience, critique, and point of view.
+Konrad te Heesen, Lukas Strickler, Marco Ginanesini, and Franz Dieter extended it with their own experience and point of view.
 
 ---
-
-## Run It Locally
 
 ```bash
 pnpm install
