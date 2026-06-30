@@ -15,7 +15,7 @@ Production runs at:
 
 [hackathons.ralfboltshauser.com](https://hackathons.ralfboltshauser.com)
 
-The site is intentionally private. It is protected with HTTP Basic Auth in [`proxy.ts`](./proxy.ts), and the password is stored as a Vercel environment variable.
+The site is intentionally private. It is protected with a password-only gate in [`proxy.ts`](./proxy.ts), and the password is stored as a Vercel environment variable.
 
 ## Privacy
 
@@ -51,26 +51,12 @@ Run locally with a password:
 SITE_PASSWORD=local-password pnpm dev
 ```
 
-Optional username:
-
-```bash
-SITE_USERNAME=ralf SITE_PASSWORD=local-password pnpm dev
-```
-
-If `SITE_USERNAME` is not set, it defaults to `ralf`.
-
 ## Environment Variables
 
 Required in deployed environments:
 
 ```bash
 SITE_PASSWORD=...
-```
-
-Optional:
-
-```bash
-SITE_USERNAME=ralf
 ```
 
 Never commit real credentials. Vercel production credentials are configured through Vercel environment variables.
@@ -106,6 +92,6 @@ app/
 public/
   hackathon-proof/     Hackathon proof photos
 
-proxy.ts               Basic Auth + noindex response headers
+proxy.ts               Password gate + noindex response headers
 next.config.ts         Global noindex headers
 ```
