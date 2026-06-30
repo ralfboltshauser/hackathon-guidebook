@@ -431,7 +431,7 @@ export const guide: Phase[] = [
       {
         title: "Demo reliability",
         intent:
-          "Ensure the demo is deterministic. If it's not reliable, do not do a live demo.",
+          "Ensure the demo is deterministic. Many hackathons are lost because demos fail for reasons you did not consider, so make the demo bulletproof. If it's not reliable, do not do a live demo.",
         moves: [
           "Ensure the demo is deterministic.",
           "If it's a live demo, implement a reset script and test repeatedly: run, reset, run again.",
