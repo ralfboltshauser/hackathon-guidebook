@@ -390,14 +390,12 @@ function Hero({
                 priority={i === 0}
               />
             ))}
-            {/* Gradient blending photo into card */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#f6f1e7] to-transparent" />
             {/* Subtle event label */}
-            <div className="absolute bottom-3 left-5 z-10 h-4">
+            <div className="absolute bottom-3 left-4 z-10 h-5">
               {wins.map((w, i) => (
                 <span
                   key={w.event}
-                  className={`absolute bottom-0 left-0 whitespace-nowrap font-sans text-[10px] uppercase tracking-[0.22em] text-[#241c12]/55 transition-opacity duration-500 ${
+                  className={`absolute bottom-0 left-0 whitespace-nowrap rounded-sm bg-[#241c12]/50 px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em] text-white/80 backdrop-blur-sm transition-opacity duration-500 ${
                     activePhoto === i ? "opacity-100" : "opacity-0"
                   }`}
                 >
