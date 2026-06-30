@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const REALM = "GoodBoys Hackathon GuideBook";
 const DEFAULT_USERNAME = "ralf";
+const ROBOTS_HEADER = "noindex, nofollow, noarchive, noimageindex, nosnippet";
 
 type Credentials = {
   username: string;
@@ -14,6 +15,7 @@ function challenge() {
     headers: {
       "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"`,
       "Cache-Control": "no-store",
+      "X-Robots-Tag": ROBOTS_HEADER,
     },
   });
 }
@@ -23,6 +25,7 @@ function unavailable() {
     status: 503,
     headers: {
       "Cache-Control": "no-store",
+      "X-Robots-Tag": ROBOTS_HEADER,
     },
   });
 }
@@ -70,6 +73,12 @@ async function timingSafeEqual(left: string, right: string) {
 }
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/robots.txt") {
+    const response = NextResponse.next();
+    response.headers.set("X-Robots-Tag", ROBOTS_HEADER);
+    return response;
+  }
+
   const sitePassword = process.env.SITE_PASSWORD;
 
   if (!sitePassword) {
@@ -92,5 +101,7 @@ export async function proxy(request: NextRequest) {
     return challenge();
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set("X-Robots-Tag", ROBOTS_HEADER);
+  return response;
 }
