@@ -6,8 +6,12 @@ A practical guide and checklist for running hackathons with a win-oriented team.
 
 ```bash
 pnpm install
-pnpm dev
+SITE_PASSWORD=local-password pnpm dev
 ```
+
+The site is protected with HTTP Basic Auth in `proxy.ts`.
+Set `SITE_PASSWORD` in every deployed environment. `SITE_USERNAME` is optional
+and defaults to `ralf`.
 
 ## Checks
 
