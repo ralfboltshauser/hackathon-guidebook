@@ -40,6 +40,34 @@ function scrollToPhase(i: number, smooth = true) {
 
 type Mode = "learn" | "hack";
 
+const isMode = (value: string | null): value is Mode =>
+  value === "learn" || value === "hack";
+
+function clampPhase(value: number) {
+  return Math.min(Math.max(value, 0), guide.length - 1);
+}
+
+function readInitialState() {
+  if (typeof window === "undefined") {
+    return { mode: "learn" as Mode, phaseIdx: 0 };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get("tab");
+  const mode = isMode(tab) ? tab : "learn";
+  const phaseParam = Number(params.get("phase"));
+  const phaseIdx = Number.isInteger(phaseParam) ? clampPhase(phaseParam - 1) : 0;
+
+  return { mode, phaseIdx };
+}
+
+function writeViewStateToUrl(mode: Mode, phaseIdx: number) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", mode);
+  url.searchParams.set("phase", String(phaseIdx + 1));
+  window.history.replaceState(null, "", url);
+}
+
 const itemCount = (p: Phase) =>
   p.checklists.reduce((s, c) => s + c.items.length, 0);
 
@@ -73,8 +101,8 @@ function isEditableTarget(target: EventTarget) {
 }
 
 export function Guidebook() {
-  const [mode, setMode] = useState<Mode>("learn");
-  const [phaseIdx, setPhaseIdx] = useState(0);
+  const [mode, setMode] = useState<Mode>(() => readInitialState().mode);
+  const [phaseIdx, setPhaseIdx] = useState(() => readInitialState().phaseIdx);
   const [pendingScrollPhase, setPendingScrollPhase] = useState<number | null>(null);
   const done = useChecklistStore((state) => state.done);
   const customTodos = useChecklistStore((state) => state.customTodos);
@@ -91,13 +119,35 @@ export function Guidebook() {
   const allDone = Object.values(done).filter(Boolean).length;
   const allChecks = totalChecks + customTodoCount(customTodos);
 
+  const setViewState = useCallback((nextMode: Mode, nextPhaseIdx: number) => {
+    const safePhaseIdx = clampPhase(nextPhaseIdx);
+    setMode(nextMode);
+    setPhaseIdx(safePhaseIdx);
+    writeViewStateToUrl(nextMode, safePhaseIdx);
+  }, []);
+
+  const setPhase = useCallback(
+    (nextPhaseIdx: number | ((current: number) => number)) => {
+      setPhaseIdx((current) => {
+        const resolvedPhaseIdx = clampPhase(
+          typeof nextPhaseIdx === "function"
+            ? nextPhaseIdx(current)
+            : nextPhaseIdx,
+        );
+        writeViewStateToUrl(mode, resolvedPhaseIdx);
+        return resolvedPhaseIdx;
+      });
+    },
+    [mode],
+  );
+
   const enterHackMode = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    setMode("hack");
+    setViewState("hack", phaseIdx);
   };
   const enterLearnMode = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    setMode("learn");
+    setViewState("learn", phaseIdx);
   };
 
   useEffect(() => {
@@ -111,8 +161,8 @@ export function Guidebook() {
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <button
               onClick={() => {
-                setPhaseIdx(0);
-                enterLearnMode();
+                window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+                setViewState("learn", 0);
               }}
               className="w-fit text-left font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b] transition-colors hover:text-[#241c12]"
             >
@@ -169,7 +219,7 @@ export function Guidebook() {
                   <li key={p.n} className="flex-shrink-0">
                     <button
                       onClick={() => {
-                        setPhaseIdx(i);
+                        setPhase(i);
                         if (mode === "learn") {
                           setPendingScrollPhase(i);
                           scrollToPhase(i);
@@ -232,11 +282,11 @@ export function Guidebook() {
         <LearnView
           initialPhase={phaseIdx}
           pendingScrollPhase={pendingScrollPhase}
-          onActivePhase={setPhaseIdx}
+          onActivePhase={setPhase}
           onPendingScrollSettled={() => setPendingScrollPhase(null)}
           onOpenChecklist={(i) => {
-            setPhaseIdx(i);
-            enterHackMode();
+            window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+            setViewState("hack", i);
           }}
         />
       ) : (
@@ -252,8 +302,8 @@ export function Guidebook() {
           onResetProgress={resetProgress}
           onResetProgressAndCustomTodos={resetProgressAndCustomTodos}
           onRead={enterLearnMode}
-          onPrev={() => setPhaseIdx((i) => Math.max(0, i - 1))}
-          onNext={() => setPhaseIdx((i) => Math.min(guide.length - 1, i + 1))}
+          onPrev={() => setPhase((i) => i - 1)}
+          onNext={() => setPhase((i) => i + 1)}
         />
       )}
     </div>
