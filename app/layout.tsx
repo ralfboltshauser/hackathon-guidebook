@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import { AgentationDev } from "./AgentationDev";
 import "./globals.css";
 
 const atkinson = Atkinson_Hyperlegible({
@@ -65,7 +64,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <Analytics />
-        <AgentationDev />
       </body>
     </html>
   );

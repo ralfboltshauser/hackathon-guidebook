@@ -434,7 +434,7 @@ function Hero({
                 Track record
               </p>
               <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#241c12]/45">
-                2023 — 2025
+                2023 – 2025
               </p>
             </div>
             <ul onMouseLeave={() => setIsPhotoCyclePaused(false)}>

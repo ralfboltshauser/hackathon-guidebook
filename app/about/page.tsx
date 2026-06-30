@@ -59,7 +59,7 @@ export default function AboutPage() {
               <p>
                 Ralf Boltshauser, Samuel Baumgartner, Marco Pagano, and Lionel
                 Ding started competing at hackathons together. They kept placing
-                well — Start Hack, ETH AI Hack, BaselHack, Moin Hack — and after
+                well. At Start Hack, ETH AI Hack, BaselHack, Moin Hack. After
                 each event they wrote down what had worked and what hadn't.
               </p>
               <p>
@@ -75,7 +75,7 @@ export default function AboutPage() {
         <div className="border-b border-[#241c12]/15 py-14">
           <p className="max-w-2xl text-[1.35rem] font-light leading-[1.55] text-[#241c12]/65">
             At Start Hack they met Konrad and his team. They shared the guidebook.
-            Konrad's team used it — and won their next hackathon. They came back
+            Konrad's team used it and won their next hackathon. They came back
             with things the guide had missed.
           </p>
         </div>
