@@ -113,13 +113,13 @@ export function Guidebook() {
             >
               Good Boys Hackathon Guide
             </button>
-            <span className="font-sans text-[11px] text-[#241c12]/45">
+            <span className="font-sans text-[11px] text-[#241c12]/38">
               by{" "}
               <a
                 href="https://www.linkedin.com/in/ralfboltshauser/"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[#b4530a] underline-offset-4 transition-colors hover:text-[#241c12] hover:underline"
+                className="text-[#241c12]/50 underline-offset-4 transition-colors hover:text-[#241c12]/75 hover:underline"
               >
                 Ralf Boltshauser
               </a>
