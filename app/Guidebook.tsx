@@ -337,6 +337,19 @@ function Hero({
   onChecklists: () => void;
 }) {
   const [activePhoto, setActivePhoto] = useState(0);
+  const [isPhotoCyclePaused, setIsPhotoCyclePaused] = useState(false);
+
+  useEffect(() => {
+    if (isPhotoCyclePaused) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setActivePhoto((current) => (current + 1) % WIN_PHOTOS.length);
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, [isPhotoCyclePaused]);
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-16">
@@ -415,11 +428,14 @@ function Hero({
                 2023 — 2025
               </p>
             </div>
-            <ul>
+            <ul onMouseLeave={() => setIsPhotoCyclePaused(false)}>
               {wins.map((w, i) => (
                 <li
                   key={w.event}
-                  onMouseEnter={() => setActivePhoto(i)}
+                  onMouseEnter={() => {
+                    setIsPhotoCyclePaused(true);
+                    setActivePhoto(i);
+                  }}
                   className="border-b border-[#241c12]/10 last:border-0"
                 >
                   <WinItem
