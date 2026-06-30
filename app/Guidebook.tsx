@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { AlertTriangle, Check, Plus, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -54,6 +62,15 @@ const phaseComplete = (
 
 const customTodoCount = (customTodos: Record<string, CustomTodo[]>) =>
   Object.values(customTodos).reduce((sum, todos) => sum + todos.length, 0);
+
+function isEditableTarget(target: EventTarget) {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
 
 export function Guidebook() {
   const [mode, setMode] = useState<Mode>("learn");
@@ -675,7 +692,22 @@ function HackView({
   onNext: () => void;
 }) {
   const [resetOpen, setResetOpen] = useState(false);
+  const [focusedCheckIndex, setFocusedCheckIndex] = useState(0);
+  const focusAfterPhaseChange = useRef(false);
+  const viewRef = useRef<HTMLElement>(null);
   const phase = guide[phaseIdx];
+  const checklistKeys = useMemo(
+    () =>
+      phase.checklists.flatMap((group, groupIdx) => [
+        ...group.items.map((_, itemIdx) =>
+          staticCheckKey(phaseIdx, groupIdx, itemIdx),
+        ),
+        ...(customTodos[checklistGroupKey(phaseIdx, groupIdx)] ?? []).map((todo) =>
+          customCheckKey(todo.id),
+        ),
+      ]),
+    [customTodos, phase.checklists, phaseIdx],
+  );
   const phaseCustomTodos = phase.checklists.flatMap(
     (_, groupIdx) => customTodos[checklistGroupKey(phaseIdx, groupIdx)] ?? [],
   );
@@ -692,8 +724,91 @@ function HackView({
   }, 0);
   const pct = Math.round((complete / total) * 100);
 
+  const focusCheckAt = useCallback(
+    (index: number) => {
+      const key = checklistKeys[index];
+      if (!key) {
+        return;
+      }
+
+      const button = viewRef.current?.querySelector<HTMLButtonElement>(
+        `[data-check-key="${CSS.escape(key)}"]`,
+      );
+      button?.focus();
+    },
+    [checklistKeys],
+  );
+
+  useEffect(() => {
+    if (!focusAfterPhaseChange.current) {
+      return;
+    }
+
+    focusAfterPhaseChange.current = false;
+    setFocusedCheckIndex(0);
+    window.requestAnimationFrame(() => focusCheckAt(0));
+  }, [checklistKeys, focusCheckAt, phaseIdx]);
+
+  const handleChecklistKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (resetOpen || isEditableTarget(event.target)) {
+      return;
+    }
+
+    const activeElement = document.activeElement;
+    const activeKey =
+      activeElement instanceof HTMLElement
+        ? activeElement.dataset.checkKey
+        : undefined;
+    const activeIndex = activeKey ? checklistKeys.indexOf(activeKey) : -1;
+    const currentIndex =
+      activeIndex >= 0
+        ? activeIndex
+        : Math.min(focusedCheckIndex, Math.max(0, checklistKeys.length - 1));
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      const nextIndex =
+        checklistKeys.length === 0
+          ? 0
+          : (currentIndex + direction + checklistKeys.length) %
+            checklistKeys.length;
+
+      setFocusedCheckIndex(nextIndex);
+      focusCheckAt(nextIndex);
+      return;
+    }
+
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      const canMoveLeft = phaseIdx > 0;
+      const canMoveRight = phaseIdx < guide.length - 1;
+
+      if (event.key === "ArrowLeft" && canMoveLeft) {
+        focusAfterPhaseChange.current = true;
+        onPrev();
+      }
+
+      if (event.key === "ArrowRight" && canMoveRight) {
+        focusAfterPhaseChange.current = true;
+        onNext();
+      }
+
+      return;
+    }
+
+    if ((event.key === "Enter" || event.key === " ") && activeKey) {
+      event.preventDefault();
+      onToggle(activeKey);
+    }
+  };
+
   return (
-    <main className="mx-auto grid max-w-7xl gap-8 px-4 pb-28 pt-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+    <main
+      ref={viewRef}
+      onKeyDown={handleChecklistKeyDown}
+      className="mx-auto grid max-w-7xl gap-8 px-4 pb-28 pt-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px]"
+    >
       <section className="min-w-0">
         <div className="flex flex-col gap-5 border-b border-[#241c12]/15 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -758,9 +873,12 @@ function HackView({
                   {group.items.map((item, ii) => {
                     const itemKey = staticCheckKey(phaseIdx, gi, ii);
                     const checked = !!done[itemKey];
+                    const itemIndex = checklistKeys.indexOf(itemKey);
                     return (
                       <li key={item.label}>
                         <button
+                          data-check-key={itemKey}
+                          onFocus={() => setFocusedCheckIndex(itemIndex)}
                           onClick={() => onToggle(itemKey)}
                           className={`flex w-full items-center gap-4 rounded-md border px-4 py-4 text-left transition-colors sm:px-5 ${
                             checked
@@ -798,6 +916,7 @@ function HackView({
                   {groupCustomTodos.map((todo) => {
                     const itemKey = customCheckKey(todo.id);
                     const checked = !!done[itemKey];
+                    const itemIndex = checklistKeys.indexOf(itemKey);
 
                     return (
                       <li key={todo.id}>
@@ -809,6 +928,8 @@ function HackView({
                           }`}
                         >
                           <button
+                            data-check-key={itemKey}
+                            onFocus={() => setFocusedCheckIndex(itemIndex)}
                             onClick={() => onToggle(itemKey)}
                             className="flex min-w-0 flex-1 items-center gap-4 text-left"
                           >
