@@ -3,7 +3,19 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "About the Hackathon Guidebook",
+  description:
+    "The origin story behind Hackathon Guidebook and the teams whose hackathon learnings shaped it.",
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: "About the Hackathon Guidebook",
+    description:
+      "The origin story behind Hackathon Guidebook and the teams whose hackathon learnings shaped it.",
+    url: "/about",
+    type: "website",
+  },
 };
 
 export default function AboutPage() {

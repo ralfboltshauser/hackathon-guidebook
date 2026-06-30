@@ -3,6 +3,11 @@ import { Atkinson_Hyperlegible } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
+const siteUrl = "https://www.hackathon-guidebook.com";
+const siteTitle = "Hackathon Guidebook";
+const siteDescription =
+  "A field-tested guidebook and live checklist for winning hackathons: preparation, challenge strategy, discovery, building, demo reliability, and pitching.";
+
 const atkinson = Atkinson_Hyperlegible({
   variable: "--font-atkinson",
   weight: ["400", "700"],
@@ -11,26 +16,37 @@ const atkinson = Atkinson_Hyperlegible({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://hackathons.ralfboltshauser.com"),
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "Hackathon Guidebook",
-    template: "%s | Hackathon Guidebook",
+    default: `${siteTitle} | How to Win Hackathons`,
+    template: `%s | ${siteTitle}`,
   },
-  description:
-    "A field-tested playbook and checklist for running hackathons with a win-oriented team.",
-  applicationName: "Hackathon Guidebook",
-  authors: [{ name: "Ralf Boltshauser", url: "https://ralfboltshauser.com" }],
+  description: siteDescription,
+  applicationName: siteTitle,
+  keywords: [
+    "hackathon guide",
+    "hackathon checklist",
+    "how to win hackathons",
+    "hackathon playbook",
+    "hackathon pitch",
+    "hackathon demo",
+    "startup hackathon",
+  ],
+  authors: [
+    { name: "Ralf Boltshauser", url: "https://www.linkedin.com/in/ralfboltshauser/" },
+    { name: "Konrad te Heesen", url: "https://www.linkedin.com/in/konrad-te-heesen-bb2876280/" },
+  ],
   creator: "Ralf Boltshauser",
   publisher: "Ralf Boltshauser",
+  category: "Education",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Hackathon Guidebook",
-    description:
-      "A field-tested playbook and checklist for running hackathons with a win-oriented team.",
+    title: `${siteTitle} | How to Win Hackathons`,
+    description: siteDescription,
     url: "/",
-    siteName: "Hackathon Guidebook",
+    siteName: siteTitle,
     type: "website",
     locale: "en_US",
     images: [
@@ -38,16 +54,26 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Hackathon Guidebook",
+        alt: `${siteTitle} preview image`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hackathon Guidebook",
-    description:
-      "A field-tested playbook and checklist for running hackathons with a win-oriented team.",
+    title: `${siteTitle} | How to Win Hackathons`,
+    description: siteDescription,
     images: ["/twitter-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
