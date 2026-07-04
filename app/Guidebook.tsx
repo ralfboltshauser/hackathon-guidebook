@@ -150,17 +150,16 @@ export function Guidebook() {
 
   const setPhase = useCallback(
     (nextPhaseIdx: number | ((current: number) => number)) => {
-      setPhaseIdx((current) => {
-        const resolvedPhaseIdx = clampPhase(
-          typeof nextPhaseIdx === "function"
-            ? nextPhaseIdx(current)
-            : nextPhaseIdx,
-        );
-        writeViewStateToUrl(mode, resolvedPhaseIdx);
-        return resolvedPhaseIdx;
-      });
+      const resolvedPhaseIdx = clampPhase(
+        typeof nextPhaseIdx === "function"
+          ? nextPhaseIdx(phaseIdx)
+          : nextPhaseIdx,
+      );
+
+      setPhaseIdx(resolvedPhaseIdx);
+      writeViewStateToUrl(mode, resolvedPhaseIdx);
     },
-    [mode],
+    [mode, phaseIdx],
   );
 
   const enterHackMode = () => {
@@ -172,12 +171,11 @@ export function Guidebook() {
     setViewState("learn", phaseIdx);
   };
   const toggleTheme = () => {
-    setTheme((currentTheme) => {
-      const nextTheme = currentTheme === "dark" ? "light" : "dark";
-      applyTheme(nextTheme);
-      window.localStorage.setItem("hackathon-guidebook-theme", nextTheme);
-      return nextTheme;
-    });
+    const nextTheme = theme === "dark" ? "light" : "dark";
+
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+    window.localStorage.setItem("hackathon-guidebook-theme", nextTheme);
   };
 
   useEffect(() => {
