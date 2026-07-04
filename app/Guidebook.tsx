@@ -101,8 +101,8 @@ function isEditableTarget(target: EventTarget) {
 }
 
 export function Guidebook() {
-  const [mode, setMode] = useState<Mode>(() => readInitialState().mode);
-  const [phaseIdx, setPhaseIdx] = useState(() => readInitialState().phaseIdx);
+  const [mode, setMode] = useState<Mode>("learn");
+  const [phaseIdx, setPhaseIdx] = useState(0);
   const [pendingScrollPhase, setPendingScrollPhase] = useState<number | null>(null);
   const done = useChecklistStore((state) => state.done);
   const customTodos = useChecklistStore((state) => state.customTodos);
@@ -153,6 +153,20 @@ export function Guidebook() {
   useEffect(() => {
     migrateLegacyProgress();
   }, [migrateLegacyProgress]);
+
+  useEffect(() => {
+    const initialState = readInitialState();
+    const frame = window.requestAnimationFrame(() => {
+      setMode(initialState.mode);
+      setPhaseIdx(initialState.phaseIdx);
+
+      if (initialState.mode === "learn" && initialState.phaseIdx > 0) {
+        scrollToPhase(initialState.phaseIdx, false);
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <div className="min-h-screen bg-page font-serif text-ink">
