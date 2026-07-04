@@ -1,0 +1,68 @@
+import { Callout, DoDont, Rubric } from "@/components/deep-dives/mdx";
+
+<Callout title="Draft status">
+  This is an initial content draft. It is useful as a starting structure, but it has not been reviewed as domain expertise yet.
+</Callout>
+
+## The first principle
+
+A hackathon pitch is not a product tour. It is a compressed proof that a real problem exists, your team understood it faster than others, and the demo is the evidence.
+
+The judges are usually holding too many projects in their head. Your job is to reduce their mental work. They should understand the category, the user, the pain, the intervention, and the reason your team is credible without reconstructing the story themselves.
+
+## A reliable pitch spine
+
+1. Name the user and the painful moment.
+2. Show why the current workaround is broken.
+3. State the insight your team found.
+4. Demo only the flow that proves the insight.
+5. Explain what you built and what is real.
+6. Make the win condition obvious.
+7. End with the next concrete step.
+
+<DoDont
+  doItems={[
+    "Start with the person who has the problem, not the technology you used.",
+    "Make the demo answer the exact claim you made in the opening.",
+    "Use one memorable sentence for why this should exist.",
+  ]}
+  avoidItems={[
+    "Listing every feature the team shipped.",
+    "Saving the actual problem for slide three.",
+    "Treating sponsor API usage as the whole story.",
+  ]}
+/>
+
+## The demo is evidence
+
+The strongest pitches make the demo feel like the natural consequence of the setup. If you say the problem is slow review cycles, the demo should show the review cycle collapsing. If you say the problem is missing context, the demo should show context appearing at the decision point.
+
+Do not demo setup, login, empty states, or engineering plumbing unless those are the invention.
+
+<Rubric
+  rows={[
+    {
+      label: "Problem",
+      strong: "A judge can repeat the user pain in one sentence.",
+      weak: "The pitch describes a broad domain but no painful moment.",
+    },
+    {
+      label: "Demo",
+      strong: "The demo proves the central claim with one coherent flow.",
+      weak: "The demo shows disconnected features and leaves the claim implicit.",
+    },
+    {
+      label: "Credibility",
+      strong: "The team says what is built, mocked, validated, and next.",
+      weak: "The team hides uncertainty behind vague future language.",
+    },
+  ]}
+/>
+
+## Draft rehearsal checklist
+
+- Can someone outside the team explain the project after one listen?
+- Does every slide either create tension or resolve it?
+- Does the demo start less than halfway through the pitch?
+- Is the strongest sentence repeated at the end?
+- Does the last line tell judges what to remember?

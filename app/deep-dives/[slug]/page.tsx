@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { DeepDiveHeader } from "@/components/deep-dives/DeepDiveHeader";
 import { DraftBadge } from "@/components/deep-dives/DraftBadge";
 import { deepDives, getDeepDive, getDeepDiveOgImagePath } from "@/lib/deep-dives";
-import { siteAuthors, siteTitle, siteUrl } from "@/lib/site";
+import { siteAuthors, siteTitle } from "@/lib/site";
 
 type DeepDivePageProps = {
   params: Promise<{ slug: string }>;
@@ -52,7 +52,7 @@ export async function generateMetadata({
       tags: ["hackathon", deepDive.phase, deepDive.artifact, deepDive.status],
       images: [
         {
-          url: `${siteUrl}${getDeepDiveOgImagePath(deepDive.slug)}`,
+          url: getDeepDiveOgImagePath(deepDive.slug),
           width: 1200,
           height: 630,
           alt: `${deepDive.title} draft deep dive from Hackathon Guidebook`,
@@ -65,7 +65,7 @@ export async function generateMetadata({
       description: deepDive.socialDescription,
       images: [
         {
-          url: `${siteUrl}${getDeepDiveOgImagePath(deepDive.slug)}`,
+          url: getDeepDiveOgImagePath(deepDive.slug),
           alt: `${deepDive.title} draft deep dive from Hackathon Guidebook`,
         },
       ],
@@ -126,7 +126,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
         </header>
 
         {/* Centered narrow prose */}
-        <div className="mx-auto max-w-[44rem] px-4 py-14 sm:px-6 lg:py-20">
+        <div className="mx-auto max-w-[56rem] px-4 py-14 sm:px-6 lg:py-20">
           <Content />
         </div>
       </article>
