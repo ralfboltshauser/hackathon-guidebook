@@ -356,11 +356,7 @@ function ModeButton({
       }`}
     >
       {active && (
-        <motion.span
-          layoutId="mode-toggle-indicator"
-          className="absolute inset-0 rounded-none bg-accent"
-          transition={{ type: "spring", stiffness: 420, damping: 34 }}
-        />
+        <span className="absolute inset-0 rounded-none bg-accent" />
       )}
       <span className="relative z-10">{label}</span>
       {badge && (

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 type DeepDiveHeaderProps = {
@@ -77,11 +76,7 @@ function HeaderTab({
       }`}
     >
       {active && (
-        <motion.span
-          layoutId="mode-toggle-indicator"
-          className="absolute inset-0 rounded-none bg-accent"
-          transition={{ type: "spring", stiffness: 420, damping: 34 }}
-        />
+        <span className="absolute inset-0 rounded-none bg-accent" />
       )}
       <span className="relative z-10">{label}</span>
     </Link>
