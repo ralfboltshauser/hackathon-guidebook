@@ -10,6 +10,10 @@ The thing most teams get wrong: they think winning is about who builds the most.
 
 Six phases: Before, Start, During, Final Hours, Pitch, After. Each has a guide (Learn tab) and a checklist (Hack tab).
 
+The site also has a Deep Dives section for longer draft articles on specific
+topics such as pitching, teaser videos, demo reliability, challenge selection,
+team roles, and post-hackathon follow-up.
+
 ## Who this is for
 
 Anyone showing up to a hackathon to win, first time or tenth.
@@ -21,6 +25,33 @@ If you're there to explore or have fun, this is probably overkill.
 Before: read through the Learn tab, all six phases. Do it before you arrive.
 
 During: keep the Hack tab open and work through the checklists. Every step you skip lowers your odds.
+
+## Development
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Run the full local gate before pushing:
+
+```bash
+pnpm check
+```
+
+`pnpm check` runs linting, duplicate-code detection, and a production build.
+
+## Content architecture
+
+Deep-dive article bodies live in `content/deep-dives/<slug>/index.md` or
+`index.mdx`.
+
+Metadata is intentionally centralized in `lib/deep-dives.ts` instead of
+frontmatter. The registry powers the library page, article pages, sitemap,
+metadata, related articles, and generated OG images.
+
+Use `.md` for plain prose and `.mdx` when an article needs React components from
+`components/deep-dives/mdx`.
 
 ## Who this is from
 

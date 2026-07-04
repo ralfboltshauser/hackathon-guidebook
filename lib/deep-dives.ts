@@ -26,6 +26,19 @@ export type DeepDive = {
 const draftNote =
   "Initial content draft. Treat this as a working outline, not validated domain expertise yet.";
 
+export const deepDiveLibrary = {
+  title: "Deep Dives",
+  headline: "The parts of winning that do not fit in a checklist.",
+  description:
+    "Draft deep dives for hackathon pitching, teaser videos, demo reliability, challenge selection, team roles, and post-hackathon leverage.",
+  intro:
+    "Nine articles on the decisions, psychology, and craft behind placing well at a hackathon. All content is an initial draft.",
+  socialTitle: "Deep Dives",
+  socialDescription:
+    "Pitching, demo reliability, challenge selection, videos, roles, and follow-up.",
+  ogAlt: "Hackathon Guidebook deep dives library",
+};
+
 export const deepDives = [
   {
     slug: "pitch",

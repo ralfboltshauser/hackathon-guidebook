@@ -3,20 +3,18 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { DeepDiveHeader } from "@/components/deep-dives/DeepDiveHeader";
 import { DraftBadge } from "@/components/deep-dives/DraftBadge";
-import { deepDives, getDeepDivePhases } from "@/lib/deep-dives";
+import { deepDiveLibrary, deepDives, getDeepDivePhases } from "@/lib/deep-dives";
 import { siteTitle, siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Deep Dives",
-  description:
-    "Draft deep dives for hackathon pitching, teaser videos, demo reliability, challenge selection, team roles, and post-hackathon leverage.",
+  title: deepDiveLibrary.title,
+  description: deepDiveLibrary.description,
   alternates: {
     canonical: "/deep-dives",
   },
   openGraph: {
-    title: `Deep Dives | ${siteTitle}`,
-    description:
-      "Draft deep dives for hackathon pitching, teaser videos, demo reliability, challenge selection, team roles, and post-hackathon leverage.",
+    title: `${deepDiveLibrary.socialTitle} | ${siteTitle}`,
+    description: deepDiveLibrary.description,
     url: "/deep-dives",
     siteName: siteTitle,
     type: "website",
@@ -25,19 +23,18 @@ export const metadata: Metadata = {
         url: `${siteUrl}/deep-dives/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: "Hackathon Guidebook deep dives library",
+        alt: deepDiveLibrary.ogAlt,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: `Deep Dives | ${siteTitle}`,
-    description:
-      "Draft deep dives for hackathon pitching, teaser videos, demo reliability, challenge selection, team roles, and post-hackathon leverage.",
+    title: `${deepDiveLibrary.socialTitle} | ${siteTitle}`,
+    description: deepDiveLibrary.description,
     images: [
       {
         url: `${siteUrl}/deep-dives/opengraph-image`,
-        alt: "Hackathon Guidebook deep dives library",
+        alt: deepDiveLibrary.ogAlt,
       },
     ],
   },
@@ -57,11 +54,10 @@ export default function DeepDivesPage() {
             Deep dives
           </p>
           <h1 className="mt-5 max-w-3xl text-[clamp(2.6rem,6vw,4.5rem)] font-light leading-[0.92]">
-            The parts of winning that do not fit in a checklist.
+            {deepDiveLibrary.headline}
           </h1>
           <p className="mt-6 max-w-xl font-sans text-base leading-7 text-ink/60">
-            Nine articles on the decisions, psychology, and craft behind placing
-            well at a hackathon. All content is an initial draft.
+            {deepDiveLibrary.intro}
           </p>
         </div>
       </section>

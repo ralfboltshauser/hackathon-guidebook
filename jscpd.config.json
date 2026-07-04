@@ -1,0 +1,14 @@
+{
+  "minLines": 8,
+  "minTokens": 70,
+  "threshold": 3,
+  "reporters": ["console"],
+  "ignore": [
+    "node_modules/**",
+    ".next/**",
+    ".vercel/**",
+    "pnpm-lock.yaml",
+    "public/**",
+    "content/deep-dives/**"
+  ]
+}

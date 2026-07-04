@@ -16,7 +16,8 @@
 }
 
 @layer base {
-  :root {
+  :root,
+  :root[data-theme="dark"] {
     color-scheme: dark;
     --background: #050608;
     --foreground: #f4f0e8;
@@ -27,15 +28,6 @@
     --panel-strong: #182332;
     --accent: #2f9bff;
     --accent-strong: #7cc8ff;
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-page: var(--page);
-    --color-ink: var(--ink);
-    --color-muted: var(--muted);
-    --color-panel: var(--panel);
-    --color-panel-strong: var(--panel-strong);
-    --color-accent: var(--accent);
-    --color-accent-strong: var(--accent-strong);
   }
 
   :root[data-theme="light"] {
@@ -49,37 +41,6 @@
     --panel-strong: #d4dce7;
     --accent: #006dcb;
     --accent-strong: #004f98;
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-page: var(--page);
-    --color-ink: var(--ink);
-    --color-muted: var(--muted);
-    --color-panel: var(--panel);
-    --color-panel-strong: var(--panel-strong);
-    --color-accent: var(--accent);
-    --color-accent-strong: var(--accent-strong);
-  }
-
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --background: #050608;
-    --foreground: #f4f0e8;
-    --page: #050608;
-    --ink: #f4f0e8;
-    --muted: #9a948b;
-    --panel: #10161d;
-    --panel-strong: #182332;
-    --accent: #2f9bff;
-    --accent-strong: #7cc8ff;
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-page: var(--page);
-    --color-ink: var(--ink);
-    --color-muted: var(--muted);
-    --color-panel: var(--panel);
-    --color-panel-strong: var(--panel-strong);
-    --color-accent: var(--accent);
-    --color-accent-strong: var(--accent-strong);
   }
 
   body {
