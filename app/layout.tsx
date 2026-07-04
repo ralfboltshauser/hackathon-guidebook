@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { siteAuthors, siteDescription, siteTitle, siteUrl } from "@/lib/site";
 import { AgentationOverlay } from "./AgentationOverlay";
 import "./globals.css";
-
-const siteUrl = "https://www.hackathon-guidebook.com";
-const siteTitle = "Hackathon Guidebook";
-const siteDescription =
-  "A field-tested guidebook and live checklist for winning hackathons: preparation, challenge strategy, discovery, building, demo reliability, and pitching.";
 
 const atkinson = Atkinson_Hyperlegible({
   variable: "--font-atkinson",
@@ -33,10 +29,7 @@ export const metadata: Metadata = {
     "hackathon demo",
     "startup hackathon",
   ],
-  authors: [
-    { name: "Ralf Boltshauser", url: "https://www.linkedin.com/in/ralfboltshauser/" },
-    { name: "Konrad te Heesen", url: "https://www.linkedin.com/in/konrad-te-heesen-bb2876280/" },
-  ],
+  authors: siteAuthors,
   creator: "Ralf Boltshauser",
   publisher: "Ralf Boltshauser",
   category: "Education",

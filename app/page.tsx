@@ -1,26 +1,19 @@
 import { Guidebook } from "./Guidebook";
+import { siteAuthors, siteDescription, siteUrl } from "@/lib/site";
 
 const guidebookStructuredData = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: "Hackathon Guidebook",
-  url: "https://www.hackathon-guidebook.com",
+  url: siteUrl,
   applicationCategory: "EducationalApplication",
   operatingSystem: "Web",
-  description:
-    "A field-tested guidebook and live checklist for winning hackathons: preparation, challenge strategy, discovery, building, demo reliability, and pitching.",
-  author: [
-    {
-      "@type": "Person",
-      name: "Ralf Boltshauser",
-      url: "https://www.linkedin.com/in/ralfboltshauser/",
-    },
-    {
-      "@type": "Person",
-      name: "Konrad te Heesen",
-      url: "https://www.linkedin.com/in/konrad-te-heesen-bb2876280/",
-    },
-  ],
+  description: siteDescription,
+  author: siteAuthors.map((author) => ({
+    "@type": "Person",
+    name: author.name,
+    url: author.url,
+  })),
   offers: {
     "@type": "Offer",
     price: "0",

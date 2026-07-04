@@ -57,7 +57,7 @@ export default function DeepDivesPage() {
             Deep dives
           </p>
           <h1 className="mt-5 max-w-3xl text-[clamp(2.6rem,6vw,4.5rem)] font-light leading-[0.92]">
-            The parts of winning that don't fit in a checklist.
+            The parts of winning that do not fit in a checklist.
           </h1>
           <p className="mt-6 max-w-xl font-sans text-base leading-7 text-ink/60">
             Nine articles on the decisions, psychology, and craft behind placing

@@ -9,10 +9,11 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import { AlertTriangle, Check, Moon, Plus, Sun, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, Plus, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   checklistGroupKey,
   customCheckKey,
@@ -39,7 +40,6 @@ function scrollToPhase(i: number, smooth = true) {
 }
 
 type Mode = "learn" | "hack";
-type Theme = "dark" | "light";
 
 const isMode = (value: string | null): value is Mode =>
   value === "learn" || value === "hack";
@@ -67,26 +67,6 @@ function writeViewStateToUrl(mode: Mode, phaseIdx: number) {
   url.searchParams.set("tab", mode);
   url.searchParams.set("phase", String(phaseIdx + 1));
   window.history.replaceState(null, "", url);
-}
-
-function readInitialTheme(): Theme {
-  if (typeof window === "undefined") {
-    return "dark";
-  }
-
-  const storedTheme = window.localStorage.getItem("hackathon-guidebook-theme");
-
-  if (storedTheme === "dark" || storedTheme === "light") {
-    return storedTheme;
-  }
-
-  return window.matchMedia("(prefers-color-scheme: light)").matches
-    ? "light"
-    : "dark";
-}
-
-function applyTheme(theme: Theme) {
-  document.documentElement.dataset.theme = theme;
 }
 
 const itemCount = (p: Phase) =>
@@ -124,7 +104,6 @@ function isEditableTarget(target: EventTarget) {
 export function Guidebook() {
   const [mode, setMode] = useState<Mode>("learn");
   const [phaseIdx, setPhaseIdx] = useState(0);
-  const [theme, setTheme] = useState<Theme>("dark");
   const [pendingScrollPhase, setPendingScrollPhase] = useState<number | null>(null);
   const done = useChecklistStore((state) => state.done);
   const customTodos = useChecklistStore((state) => state.customTodos);
@@ -170,13 +149,6 @@ export function Guidebook() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     setViewState("learn", phaseIdx);
   };
-  const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-
-    setTheme(nextTheme);
-    applyTheme(nextTheme);
-    window.localStorage.setItem("hackathon-guidebook-theme", nextTheme);
-  };
 
   useEffect(() => {
     migrateLegacyProgress();
@@ -191,16 +163,6 @@ export function Guidebook() {
       if (initialState.mode === "learn" && initialState.phaseIdx > 0) {
         scrollToPhase(initialState.phaseIdx, false);
       }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const initialTheme = readInitialTheme();
-      applyTheme(initialTheme);
-      setTheme(initialTheme);
     });
 
     return () => window.cancelAnimationFrame(frame);
@@ -243,18 +205,7 @@ export function Guidebook() {
           </div>
 
           <div className="flex items-center justify-between gap-3 lg:justify-end">
-            <button
-              onClick={toggleTheme}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-none border border-ink/20 bg-panel text-ink/65 transition-colors hover:border-accent/55 hover:text-accent"
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            >
-              {theme === "dark" ? (
-                <Sun aria-hidden="true" size={17} />
-              ) : (
-                <Moon aria-hidden="true" size={17} />
-              )}
-            </button>
+            <ThemeToggle />
             <div className="flex items-center rounded-none border border-ink/20 bg-panel p-0.5">
               <ModeButton
                 active={mode === "learn"}
@@ -266,6 +217,7 @@ export function Guidebook() {
                 onClick={enterHackMode}
                 label="Hack"
               />
+              <ModeLink href="/deep-dives" label="Deep Dives" />
             </div>
           </div>
         </div>
@@ -368,6 +320,17 @@ export function Guidebook() {
         />
       )}
     </div>
+  );
+}
+
+function ModeLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="relative flex min-h-9 items-center gap-2 rounded-none px-4 py-1.5 font-sans text-sm font-medium text-ink/60 transition-colors hover:text-ink sm:px-5"
+    >
+      <span className="relative z-10">{label}</span>
+    </Link>
   );
 }
 
