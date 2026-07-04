@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { AgentationOverlay } from "./AgentationOverlay";
 import "./globals.css";
 
 const siteUrl = "https://www.hackathon-guidebook.com";
@@ -89,6 +90,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        {process.env.NODE_ENV === "development" && <AgentationOverlay />}
         <Analytics />
       </body>
     </html>

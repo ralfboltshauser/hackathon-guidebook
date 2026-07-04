@@ -461,7 +461,7 @@ function Hero({
             The hackathon playbook
           </p>
           <h1 className="mt-6 text-[clamp(2.8rem,7vw,5.75rem)] font-light leading-[0.9]">
-            Everything we learned winning hackathons.
+            Everything we learned winning and losing hackathons.
           </h1>
           <p className="mt-7 max-w-xl text-xl font-light leading-snug text-ink/80">
             We have spent years competing in hackathons, using each one to push

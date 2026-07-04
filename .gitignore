@@ -38,7 +38,9 @@ yarn-error.log*
 
 # local agent tooling
 .claude/
-.codex/
+.codex/*
+!.codex/
+!.codex/config.toml
 
 # typescript
 *.tsbuildinfo
