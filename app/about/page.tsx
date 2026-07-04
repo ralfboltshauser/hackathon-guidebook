@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Image from "next/image";
-import { AppLink } from "@/components/navigation/AppLink";
 
 export const metadata: Metadata = {
   title: "About the Hackathon Guidebook",
@@ -23,12 +23,12 @@ export default function AboutPage() {
     <div className="min-h-screen bg-page font-serif text-ink">
       <header className="sticky top-0 z-30 border-b border-ink/15 bg-page/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
-          <AppLink
+          <Link
             href="/"
             className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted transition-colors hover:text-ink"
           >
             ← Hackathon Guidebook
-          </AppLink>
+          </Link>
         </div>
       </header>
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { DeepDiveHeader } from "@/components/deep-dives/DeepDiveHeader";
 import { DraftBadge } from "@/components/deep-dives/DraftBadge";
-import { AppLink } from "@/components/navigation/AppLink";
 import { deepDiveLibrary, deepDives, getDeepDivePhases } from "@/lib/deep-dives";
 import { siteTitle, siteUrl } from "@/lib/site";
 
@@ -84,7 +84,7 @@ export default function DeepDivesPage() {
                 {/* Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {phaseDives.map((dive) => (
-                    <AppLink
+                    <Link
                       key={dive.slug}
                       href={`/deep-dives/${dive.slug}`}
                       className="group flex flex-col justify-between border border-ink/15 bg-page p-6 transition-colors hover:border-accent/40 hover:bg-panel"
@@ -110,7 +110,7 @@ export default function DeepDivesPage() {
                         <span aria-hidden="true">·</span>
                         <span>{dive.readTime}</span>
                       </div>
-                    </AppLink>
+                    </Link>
                   ))}
                 </div>
               </div>

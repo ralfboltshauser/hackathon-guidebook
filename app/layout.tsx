@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import { RouteScrollManager } from "@/components/navigation/RouteScrollManager";
 import { siteAuthors, siteDescription, siteTitle, siteUrl } from "@/lib/site";
 import { AgentationOverlay } from "./AgentationOverlay";
 import "./globals.css";
@@ -83,7 +82,6 @@ export default function RootLayout({
       className={`${atkinson.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <RouteScrollManager />
         {children}
         {process.env.NODE_ENV === "development" && <AgentationOverlay />}
         <Analytics />

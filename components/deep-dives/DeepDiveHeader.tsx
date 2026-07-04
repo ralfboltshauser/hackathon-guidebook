@@ -1,6 +1,6 @@
 "use client";
 
-import { AppLink } from "@/components/navigation/AppLink";
+import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 type DeepDiveHeaderProps = {
@@ -12,12 +12,12 @@ export function DeepDiveHeader({ active = "deep-dives" }: DeepDiveHeaderProps) {
     <header className="sticky top-0 z-30 border-b border-ink/15 bg-page/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <AppLink
+          <Link
             href="/?tab=learn&phase=1"
             className="w-fit font-sans text-[11px] uppercase tracking-[0.28em] text-muted transition-colors hover:text-ink"
           >
             Hackathon Guidebook
-          </AppLink>
+          </Link>
           <span className="font-sans text-[11px] text-ink/38">
             by{" "}
             <a
@@ -66,7 +66,7 @@ function HeaderTab({
   active: boolean;
 }) {
   return (
-    <AppLink
+    <Link
       href={href}
       className={`relative flex min-h-9 items-center rounded-none px-4 py-1.5 font-sans text-sm font-medium transition-colors sm:px-5 ${
         active ? "text-page" : "text-ink/60 hover:text-ink"
@@ -76,6 +76,6 @@ function HeaderTab({
         <span className="absolute inset-0 rounded-none bg-accent" />
       )}
       <span className="relative z-10">{label}</span>
-    </AppLink>
+    </Link>
   );
 }
