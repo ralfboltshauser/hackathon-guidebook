@@ -12,7 +12,7 @@ import {
 import { AlertTriangle, Check, Plus, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
+import { AppLink } from "@/components/navigation/AppLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   checklistGroupKey,
@@ -273,12 +273,12 @@ export function Guidebook() {
             </ol>
           </div>
           <nav className="flex flex-shrink-0 items-center gap-3 font-sans text-[11px] text-ink/42">
-            <Link
+            <AppLink
               href="/about"
               className="underline-offset-4 transition-colors hover:text-ink/70 hover:underline"
             >
               About
-            </Link>
+            </AppLink>
             <a
               href="https://github.com/ralfboltshauser/hackathon-guidebook"
               target="_blank"
@@ -325,15 +325,12 @@ export function Guidebook() {
 
 function ModeLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link
+    <AppLink
       href={href}
-      onClick={() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      }}
       className="relative flex min-h-9 items-center gap-2 rounded-none px-4 py-1.5 font-sans text-sm font-medium text-ink/60 transition-colors hover:text-ink sm:px-5"
     >
       <span className="relative z-10">{label}</span>
-    </Link>
+    </AppLink>
   );
 }
 

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { DeepDiveHeader } from "@/components/deep-dives/DeepDiveHeader";
 import { DraftBadge } from "@/components/deep-dives/DraftBadge";
+import { AppLink } from "@/components/navigation/AppLink";
 import { deepDives, getDeepDive, getDeepDiveOgImagePath } from "@/lib/deep-dives";
 import { siteAuthors, siteTitle } from "@/lib/site";
 
@@ -100,13 +100,13 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
         {/* Wide article header */}
         <header className="border-b border-ink/15">
           <div className="mx-auto max-w-[56rem] px-4 py-10 sm:px-6 lg:py-14">
-            <Link
+            <AppLink
               href="/deep-dives"
               className="inline-flex items-center gap-2 font-sans text-sm text-ink/50 transition-colors hover:text-accent"
             >
               <ArrowLeft aria-hidden="true" size={14} />
               Deep dives
-            </Link>
+            </AppLink>
 
             <div className="mt-10">
               <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -140,7 +140,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
             </p>
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {otherDives.map((item) => (
-                <Link
+                <AppLink
                   key={item.slug}
                   href={`/deep-dives/${item.slug}`}
                   className="group flex flex-col justify-between border border-ink/15 bg-page p-5 transition-colors hover:border-accent/40 hover:bg-panel"
@@ -163,7 +163,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
                       className="text-ink/25 transition-colors group-hover:text-accent"
                     />
                   </div>
-                </Link>
+                </AppLink>
               ))}
             </div>
           </div>
