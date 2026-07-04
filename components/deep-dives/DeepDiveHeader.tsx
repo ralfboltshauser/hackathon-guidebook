@@ -69,6 +69,9 @@ function HeaderTab({
   return (
     <Link
       href={href}
+      onClick={() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }}
       className={`relative flex min-h-9 items-center rounded-none px-4 py-1.5 font-sans text-sm font-medium transition-colors sm:px-5 ${
         active ? "text-page" : "text-ink/60 hover:text-ink"
       }`}

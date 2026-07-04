@@ -327,6 +327,9 @@ function ModeLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
+      onClick={() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }}
       className="relative flex min-h-9 items-center gap-2 rounded-none px-4 py-1.5 font-sans text-sm font-medium text-ink/60 transition-colors hover:text-ink sm:px-5"
     >
       <span className="relative z-10">{label}</span>
