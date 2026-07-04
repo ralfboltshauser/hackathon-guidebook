@@ -99,7 +99,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
       <article>
         {/* Wide article header */}
         <header className="border-b border-ink/15">
-          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-14">
+          <div className="mx-auto max-w-[56rem] px-4 py-10 sm:px-6 lg:py-14">
             <Link
               href="/deep-dives"
               className="inline-flex items-center gap-2 font-sans text-sm text-ink/50 transition-colors hover:text-accent"
@@ -108,7 +108,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
               Deep dives
             </Link>
 
-            <div className="mt-10 max-w-3xl">
+            <div className="mt-10">
               <div className="mb-5 flex flex-wrap items-center gap-3">
                 <DraftBadge />
                 <span className="font-sans text-[11px] uppercase tracking-[0.18em] text-muted">
