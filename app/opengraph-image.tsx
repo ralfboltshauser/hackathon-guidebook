@@ -18,8 +18,8 @@ export default function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f6f1e7",
-          color: "#241c12",
+          background: "#050608",
+          color: "#f4f0e8",
           fontFamily: "sans-serif",
         }}
       >
@@ -35,7 +35,7 @@ export default function Image() {
             style={{
               fontSize: 118,
               lineHeight: 1,
-              letterSpacing: -4,
+              letterSpacing: 0,
               fontWeight: 500,
             }}
           >

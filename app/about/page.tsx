@@ -20,12 +20,12 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#f6f1e7] font-serif text-[#241c12]">
-      <header className="sticky top-0 z-30 border-b border-[#241c12]/15 bg-[#f6f1e7]/95 backdrop-blur">
+    <div className="min-h-screen bg-page font-serif text-ink">
+      <header className="sticky top-0 z-30 border-b border-ink/15 bg-page/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
           <Link
             href="/"
-            className="font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b] transition-colors hover:text-[#241c12]"
+            className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted transition-colors hover:text-ink"
           >
             ← Hackathon Guidebook
           </Link>
@@ -34,22 +34,22 @@ export default function AboutPage() {
 
       <main className="mx-auto max-w-4xl px-4 pb-28 pt-16 sm:px-6">
         {/* Opening */}
-        <div className="border-b border-[#241c12]/15 pb-16">
-          <p className="font-sans text-xs uppercase tracking-[0.35em] text-[#b4530a]">
+        <div className="border-b border-ink/15 pb-16">
+          <p className="font-sans text-xs uppercase tracking-[0.35em] text-accent">
             Origin
           </p>
           <h1 className="mt-5 text-[clamp(2.6rem,6.5vw,4.8rem)] font-light leading-[0.92]">
             How this came to be.
           </h1>
-          <p className="mt-7 max-w-2xl text-xl font-light leading-snug text-[#241c12]/65">
+          <p className="mt-7 max-w-2xl text-xl font-light leading-snug text-ink/65">
             Two teams. A few hackathons. One shared document that kept getting
             better.
           </p>
         </div>
 
         {/* Good Boys section */}
-        <section className="border-b border-[#241c12]/15 py-16">
-          <div className="relative aspect-[3/2] overflow-hidden rounded-xl">
+        <section className="border-b border-ink/15 py-16">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-none">
             <Image
               src="/hackathon-proof/good-boys-start.jpg"
               alt="The Good Boys team winning at Start Hack with the Syngenta prize"
@@ -61,13 +61,13 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 max-w-2xl">
-            <p className="font-sans text-[11px] uppercase tracking-[0.35em] text-[#b4530a]">
+            <p className="font-sans text-[11px] uppercase tracking-[0.35em] text-accent">
               The Good Boys
             </p>
             <h2 className="mt-5 text-[2.2rem] font-light leading-tight">
               The team that started it.
             </h2>
-            <div className="mt-6 space-y-5 font-sans text-[16px] leading-7 text-[#241c12]/65">
+            <div className="mt-6 space-y-5 font-sans text-[16px] leading-7 text-ink/65">
               <p>
                 Ralf Boltshauser, Samuel Baumgartner, Marco Pagano, and Lionel
                 Ding started competing at hackathons together. They kept placing
@@ -84,8 +84,8 @@ export default function AboutPage() {
         </section>
 
         {/* Bridge */}
-        <div className="border-b border-[#241c12]/15 py-14">
-          <p className="max-w-2xl text-[1.35rem] font-light leading-[1.55] text-[#241c12]/65">
+        <div className="border-b border-ink/15 py-14">
+          <p className="max-w-2xl text-[1.35rem] font-light leading-[1.55] text-ink/65">
             At Start Hack they met Konrad and his team. They shared the guidebook.
             Konrad&apos;s team used it and won their next hackathon. They came back
             with things the guide had missed.
@@ -94,7 +94,7 @@ export default function AboutPage() {
 
         {/* Konrad's team */}
         <section className="pt-16">
-          <div className="relative aspect-[3/2] overflow-hidden rounded-xl">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-none">
             <Image
               src="/hackathon-proof/konrad-hack-team.jpeg"
               alt="Konrad's team winning the Hackathon Pitchbattle"
@@ -105,13 +105,13 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 max-w-2xl">
-            <p className="font-sans text-[11px] uppercase tracking-[0.35em] text-[#b4530a]">
+            <p className="font-sans text-[11px] uppercase tracking-[0.35em] text-accent">
               Konrad and the team
             </p>
             <h2 className="mt-5 text-[2.2rem] font-light leading-tight">
               The team that made it better.
             </h2>
-            <div className="mt-6 space-y-5 font-sans text-[16px] leading-7 text-[#241c12]/65">
+            <div className="mt-6 space-y-5 font-sans text-[16px] leading-7 text-ink/65">
               <p>
                 Konrad te Heesen, Lukas Strickler, Marco Ginaneschi, and Franz
                 Dieter added their own experiences and perspectives. A few things

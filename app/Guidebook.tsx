@@ -155,8 +155,8 @@ export function Guidebook() {
   }, [migrateLegacyProgress]);
 
   return (
-    <div className="min-h-screen bg-[#f6f1e7] font-serif text-[#241c12]">
-      <div className="sticky top-0 z-30 border-b border-[#241c12]/15 bg-[#f6f1e7]/95 backdrop-blur">
+    <div className="min-h-screen bg-page font-serif text-ink">
+      <div className="sticky top-0 z-30 border-b border-ink/15 bg-page/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <button
@@ -164,17 +164,17 @@ export function Guidebook() {
                 window.scrollTo({ top: 0, left: 0, behavior: "auto" });
                 setViewState("learn", 0);
               }}
-              className="w-fit text-left font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b] transition-colors hover:text-[#241c12]"
+              className="w-fit text-left font-sans text-[11px] uppercase tracking-[0.28em] text-muted transition-colors hover:text-ink"
             >
               Hackathon Guidebook
             </button>
-            <span className="font-sans text-[11px] text-[#241c12]/38">
+            <span className="font-sans text-[11px] text-ink/38">
               by{" "}
               <a
                 href="https://www.linkedin.com/in/ralfboltshauser/"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[#241c12]/50 underline-offset-4 transition-colors hover:text-[#241c12]/75 hover:underline"
+                className="text-ink/50 underline-offset-4 transition-colors hover:text-ink/75 hover:underline"
               >
                 Ralf Boltshauser
               </a>
@@ -183,7 +183,7 @@ export function Guidebook() {
                 href="https://www.linkedin.com/in/konrad-te-heesen-bb2876280/"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[#241c12]/50 underline-offset-4 transition-colors hover:text-[#241c12]/75 hover:underline"
+                className="text-ink/50 underline-offset-4 transition-colors hover:text-ink/75 hover:underline"
               >
                 Konrad te Heesen
               </a>
@@ -191,10 +191,10 @@ export function Guidebook() {
           </div>
 
           <div className="flex items-center justify-between gap-3 lg:justify-end">
-            <div className="hidden font-sans text-xs text-[#241c12]/50 sm:block">
+            <div className="hidden font-sans text-xs text-ink/50 sm:block">
               {guide.length} phases / {totalChecks} operating checks
             </div>
-            <div className="flex items-center rounded-full border border-[#241c12]/20 bg-[#efe7d6] p-0.5">
+            <div className="flex items-center rounded-none border border-ink/20 bg-panel p-0.5">
               <ModeButton
                 active={mode === "learn"}
                 onClick={enterLearnMode}
@@ -225,20 +225,20 @@ export function Guidebook() {
                           scrollToPhase(i);
                         }
                       }}
-                      className={`group relative flex items-baseline gap-2 rounded-md px-3 py-1.5 transition-colors ${
-                        active ? "text-[#f6f1e7]" : "hover:bg-[#241c12]/5"
+                      className={`group relative flex items-baseline gap-2 rounded-none px-3 py-1.5 transition-colors ${
+                        active ? "text-page" : "hover:bg-ink/5"
                       }`}
                     >
                       {active && (
                         <motion.span
                           layoutId="phase-tab-indicator"
-                          className="absolute inset-0 rounded-md bg-[#241c12]"
+                          className="absolute inset-0 rounded-none bg-accent"
                           transition={{ type: "spring", stiffness: 420, damping: 34 }}
                         />
                       )}
                       <span
                         className={`relative z-10 font-sans text-[10px] tabular-nums ${
-                          active ? "text-[#f6f1e7]/60" : "text-[#241c12]/40"
+                          active ? "text-page/60" : "text-ink/40"
                         }`}
                       >
                         {p.n}
@@ -247,7 +247,7 @@ export function Guidebook() {
                       {complete && (
                         <span
                           className={`relative z-10 font-sans text-xs ${
-                            active ? "text-[#f6f1e7]" : "text-[#b4530a]"
+                            active ? "text-page" : "text-accent"
                           }`}
                         >
                           done
@@ -259,10 +259,10 @@ export function Guidebook() {
               })}
             </ol>
           </div>
-          <nav className="flex flex-shrink-0 items-center gap-3 font-sans text-[11px] text-[#241c12]/42">
+          <nav className="flex flex-shrink-0 items-center gap-3 font-sans text-[11px] text-ink/42">
             <Link
               href="/about"
-              className="underline-offset-4 transition-colors hover:text-[#241c12]/70 hover:underline"
+              className="underline-offset-4 transition-colors hover:text-ink/70 hover:underline"
             >
               About
             </Link>
@@ -270,7 +270,7 @@ export function Guidebook() {
               href="https://github.com/ralfboltshauser/hackathon-guidebook"
               target="_blank"
               rel="noreferrer"
-              className="underline-offset-4 transition-colors hover:text-[#241c12]/70 hover:underline"
+              className="underline-offset-4 transition-colors hover:text-ink/70 hover:underline"
             >
               GitHub
             </a>
@@ -324,22 +324,22 @@ function ModeButton({
   return (
     <button
       onClick={onClick}
-      className={`relative flex min-h-9 items-center gap-2 rounded-full px-4 py-1.5 font-sans text-sm font-medium transition-colors sm:px-5 ${
-        active ? "text-[#f6f1e7]" : "text-[#241c12]/60 hover:text-[#241c12]"
+      className={`relative flex min-h-9 items-center gap-2 rounded-none px-4 py-1.5 font-sans text-sm font-medium transition-colors sm:px-5 ${
+        active ? "text-page" : "text-ink/60 hover:text-ink"
       }`}
     >
       {active && (
         <motion.span
           layoutId="mode-toggle-indicator"
-          className="absolute inset-0 rounded-full bg-[#241c12]"
+          className="absolute inset-0 rounded-none bg-accent"
           transition={{ type: "spring", stiffness: 420, damping: 34 }}
         />
       )}
       <span className="relative z-10">{label}</span>
       {badge && (
         <span
-          className={`relative z-10 rounded-full px-1.5 text-[10px] tabular-nums transition-colors ${
-            active ? "bg-[#f6f1e7]/20 text-[#f6f1e7]" : "bg-[#241c12]/10 text-[#241c12]/60"
+          className={`relative z-10 rounded-none px-1.5 text-[10px] tabular-nums transition-colors ${
+            active ? "bg-page/20 text-page" : "bg-ink/10 text-ink/60"
           }`}
         >
           {badge}
@@ -440,16 +440,16 @@ function Hero({
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-16">
-      <div className="grid gap-12 border-b border-[#241c12]/15 pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)] lg:items-start lg:gap-16 lg:pb-16">
+      <div className="grid gap-12 border-b border-ink/15 pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)] lg:items-start lg:gap-16 lg:pb-16">
         {/* Message */}
         <div className="lg:pt-2">
-          <p className="font-sans text-xs uppercase tracking-[0.35em] text-[#b4530a]">
+          <p className="font-sans text-xs uppercase tracking-[0.35em] text-accent">
             The hackathon playbook
           </p>
           <h1 className="mt-6 text-[clamp(2.8rem,7vw,5.75rem)] font-light leading-[0.9]">
             Everything we learned winning hackathons.
           </h1>
-          <p className="mt-7 max-w-xl text-xl font-light leading-snug text-[#241c12]/80">
+          <p className="mt-7 max-w-xl text-xl font-light leading-snug text-ink/80">
             We have spent years competing in hackathons, using each one to push
             the edge of what we could build and learn. These are the lessons that
             kept proving themselves.
@@ -457,7 +457,7 @@ function Hero({
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <button
               onClick={onStart}
-              className="group inline-flex items-center gap-2 rounded-md bg-[#241c12] px-6 py-3.5 font-sans text-sm font-medium text-[#f6f1e7] transition-colors hover:bg-[#3a2c1c]"
+              className="group inline-flex items-center gap-2 rounded-none bg-accent px-6 py-3.5 font-sans text-sm font-medium text-page transition-colors hover:bg-accent-strong"
             >
               Open the playbook
               <span className="transition-transform group-hover:translate-x-1">
@@ -466,7 +466,7 @@ function Hero({
             </button>
             <button
               onClick={onChecklists}
-              className="inline-flex items-center rounded-md border border-[#241c12]/25 px-6 py-3.5 font-sans text-sm font-medium text-[#241c12]/80 transition-colors hover:border-[#b4530a] hover:text-[#241c12]"
+              className="inline-flex items-center rounded-none border border-ink/25 px-6 py-3.5 font-sans text-sm font-medium text-ink/80 transition-colors hover:border-accent hover:text-ink"
             >
               Go to the checklists
             </button>
@@ -474,9 +474,9 @@ function Hero({
         </div>
 
         {/* Track record card with photo */}
-        <div className="overflow-hidden rounded-xl border border-[#241c12]/15 shadow-sm">
+        <div className="overflow-hidden rounded-none border border-ink/15 shadow-sm">
           {/* Photo strip — crossfades on row hover */}
-          <div className="relative h-52 overflow-hidden bg-[#efe7d6] sm:h-60">
+          <div className="relative h-52 overflow-hidden bg-panel sm:h-60">
             {WIN_PHOTOS.map((src, i) => (
               <Image
                 key={src}
@@ -496,7 +496,7 @@ function Hero({
               {wins.map((w, i) => (
                 <span
                   key={w.event}
-                  className={`absolute bottom-0 left-0 whitespace-nowrap rounded-sm bg-[#241c12]/50 px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em] text-white/80 backdrop-blur-sm transition-opacity duration-500 ${
+                  className={`absolute bottom-0 left-0 whitespace-nowrap rounded-none bg-page/70 px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em] text-ink/80 backdrop-blur-sm transition-opacity duration-500 ${
                     activePhoto === i ? "opacity-100" : "opacity-0"
                   }`}
                 >
@@ -507,12 +507,12 @@ function Hero({
           </div>
 
           {/* Track record list */}
-          <div className="bg-white/40 px-6 pb-6 pt-2 sm:px-7 sm:pb-7">
-            <div className="flex items-baseline justify-between border-b border-[#241c12]/15 pb-3">
-              <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-[#8a6d3b]">
+          <div className="bg-panel/70 px-6 pb-6 pt-2 sm:px-7 sm:pb-7">
+            <div className="flex items-baseline justify-between border-b border-ink/15 pb-3">
+              <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-muted">
                 Track record
               </p>
-              <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#241c12]/45">
+              <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink/45">
                 2023 – 2025
               </p>
             </div>
@@ -524,7 +524,7 @@ function Hero({
                     setIsPhotoCyclePaused(true);
                     setActivePhoto(i);
                   }}
-                  className="border-b border-[#241c12]/10 last:border-0"
+                  className="border-b border-ink/10 last:border-0"
                 >
                   <WinItem
                     href={w.href}
@@ -533,13 +533,13 @@ function Hero({
                     <span
                       className={`block text-base leading-tight transition-colors duration-200 ${
                         activePhoto === i
-                          ? "text-[#b4530a]"
-                          : "group-hover:text-[#b4530a]"
+                          ? "text-accent"
+                          : "group-hover:text-accent"
                       }`}
                     >
                       {w.event}
                     </span>
-                    <span className="flex-shrink-0 font-sans text-xs uppercase tracking-wider text-[#b4530a]">
+                    <span className="flex-shrink-0 font-sans text-xs uppercase tracking-wider text-accent">
                       {w.place}
                     </span>
                   </WinItem>
@@ -586,68 +586,68 @@ function PhaseArticle({
     <section
       id={`phase-${index}`}
       data-phase={index}
-      className="scroll-mt-32 border-b border-[#241c12]/12 py-14 first:pt-2 last:border-0 sm:py-20"
+      className="scroll-mt-32 border-b border-ink/12 py-14 first:pt-2 last:border-0 sm:py-20"
     >
       <header className="max-w-4xl">
         <div className="flex flex-wrap items-center gap-3">
-          <p className="font-sans text-xs uppercase tracking-[0.35em] text-[#b4530a]">
+          <p className="font-sans text-xs uppercase tracking-[0.35em] text-accent">
             Phase {phase.n}
           </p>
-          <span className="h-px w-8 bg-[#241c12]/20" />
-          <p className="font-sans text-xs uppercase tracking-[0.22em] text-[#8a6d3b]">
+          <span className="h-px w-8 bg-ink/20" />
+          <p className="font-sans text-xs uppercase tracking-[0.22em] text-muted">
             {phase.timebox}
           </p>
         </div>
         <h2 className="mt-5 text-[clamp(2.8rem,7vw,5.5rem)] font-light leading-[0.9]">
           {phase.title}
         </h2>
-        <p className="mt-6 text-2xl font-light leading-snug text-[#241c12]/80 sm:text-[1.75rem] sm:leading-snug">
+        <p className="mt-6 text-2xl font-light leading-snug text-ink/80 sm:text-[1.75rem] sm:leading-snug">
           {phase.thesis}
         </p>
       </header>
 
-      <div className="mt-8 max-w-4xl border-l-2 border-[#b4530a] bg-[#efe7d6]/60 py-5 pl-6 pr-5">
-        <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b]">
+      <div className="mt-8 max-w-4xl border-l-2 border-accent bg-panel/60 py-5 pl-6 pr-5">
+        <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">
           Field Rule
         </p>
-        <p className="mt-2 text-xl leading-snug text-[#241c12]/88">
+        <p className="mt-2 text-xl leading-snug text-ink/88">
           {phase.fieldRule}
         </p>
       </div>
 
       <div className="mt-14">
-        <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-[#8a6d3b]">
+        <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-muted">
           The Work
         </p>
         <div className="mt-2 space-y-12">
           {phase.sections.map((section, si) => (
             <section
               key={section.title}
-              className="border-t border-[#241c12]/12 pt-8"
+              className="border-t border-ink/12 pt-8"
             >
               <div className="grid gap-x-10 gap-y-4 lg:grid-cols-[4.5rem_minmax(0,1fr)]">
-                <div className="font-sans text-sm tabular-nums text-[#b4530a] lg:pt-1.5">
+                <div className="font-sans text-sm tabular-nums text-accent lg:pt-1.5">
                   {phase.n}.{String(si + 1).padStart(2, "0")}
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-2xl font-light leading-tight sm:text-3xl">
                     {section.title}
                   </h3>
-                  <p className="mt-3 max-w-2xl font-sans text-[15px] leading-7 text-[#241c12]/65">
+                  <p className="mt-3 max-w-2xl font-sans text-[15px] leading-7 text-ink/65">
                     {section.intent}
                   </p>
                   <div className="mt-6 grid gap-x-10 gap-y-7 lg:grid-cols-2">
                     <div>
-                      <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-[#241c12]/55">
+                      <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-ink/55">
                         Do
                       </p>
                       <ul className="mt-3 space-y-3">
                         {section.moves.map((move) => (
                           <li
                             key={move}
-                            className="flex gap-3 font-sans text-sm leading-6 text-[#241c12]/85"
+                            className="flex gap-3 font-sans text-sm leading-6 text-ink/85"
                           >
-                            <span className="mt-[0.4rem] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#b4530a]" />
+                            <span className="mt-[0.4rem] h-1.5 w-1.5 flex-shrink-0 rounded-none bg-accent" />
                             <span>{move}</span>
                           </li>
                         ))}
@@ -655,17 +655,17 @@ function PhaseArticle({
                     </div>
 
                     {section.avoid?.length ? (
-                      <div className="lg:border-l lg:border-[#241c12]/10 lg:pl-10">
-                        <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-[#b4530a]/75">
+                      <div className="lg:border-l lg:border-ink/10 lg:pl-10">
+                        <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-accent/75">
                           Avoid
                         </p>
                         <ul className="mt-3 space-y-3">
                           {section.avoid.map((item) => (
                             <li
                               key={item}
-                              className="flex gap-3 font-sans text-sm leading-6 text-[#241c12]/55"
+                              className="flex gap-3 font-sans text-sm leading-6 text-ink/55"
                             >
-                              <span className="mt-px flex-shrink-0 text-xs text-[#b4530a]/70">
+                              <span className="mt-px flex-shrink-0 text-xs text-accent/70">
                                 ✕
                               </span>
                               <span>{item}</span>
@@ -682,10 +682,10 @@ function PhaseArticle({
         </div>
       </div>
 
-      <div className="mt-10 overflow-hidden rounded-lg bg-[#241c12] text-[#f6f1e7]">
+      <div className="mt-10 overflow-hidden rounded-none bg-panel-strong text-ink">
         <div className="grid gap-6 p-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-10">
           <div>
-            <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-[#e0b15d]">
+            <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-accent-strong">
               Mantra
             </p>
             <p className="mt-3 text-2xl font-light italic leading-snug sm:text-3xl">
@@ -694,9 +694,9 @@ function PhaseArticle({
           </div>
           <button
             onClick={onOpenChecklist}
-            className="group flex items-center justify-between gap-4 rounded-md border border-[#f6f1e7]/25 px-5 py-4 text-left transition-colors hover:border-[#e0b15d] hover:bg-[#f6f1e7]/5 sm:flex-col sm:items-start sm:gap-2"
+            className="group flex items-center justify-between gap-4 rounded-none border border-ink/25 px-5 py-4 text-left transition-colors hover:border-accent-strong hover:bg-ink/5 sm:flex-col sm:items-start sm:gap-2"
           >
-            <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-[#e0b15d]">
+            <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-accent-strong">
               Now do it
             </span>
             <span className="flex items-center gap-2 text-lg">
@@ -860,35 +860,35 @@ function HackView({
       className="mx-auto grid max-w-7xl gap-8 px-4 pb-28 pt-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px]"
     >
       <section className="min-w-0">
-        <div className="flex flex-col gap-5 border-b border-[#241c12]/15 pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-5 border-b border-ink/15 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-sans text-xs uppercase tracking-[0.35em] text-[#b4530a]">
+            <p className="font-sans text-xs uppercase tracking-[0.35em] text-accent">
               Checklist / Phase {phase.n}
             </p>
             <h1 className="mt-2 text-[clamp(2.75rem,8vw,6rem)] font-light leading-[0.9]">
               {phase.title}
             </h1>
-            <p className="mt-4 max-w-2xl text-xl font-light leading-snug text-[#241c12]/72">
+            <p className="mt-4 max-w-2xl text-xl font-light leading-snug text-ink/72">
               {phase.fieldRule}
             </p>
           </div>
           <div className="sm:text-right">
             <div className="font-sans text-4xl tabular-nums">
               {complete}
-              <span className="text-[#241c12]/30">/{total}</span>
+              <span className="text-ink/30">/{total}</span>
             </div>
             <button
               onClick={onRead}
-              className="mt-2 font-sans text-sm text-[#b4530a] underline-offset-4 hover:underline"
+              className="mt-2 font-sans text-sm text-accent underline-offset-4 hover:underline"
             >
               Read the guide
             </button>
           </div>
         </div>
 
-        <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#241c12]/10">
+        <div className="mt-5 h-1.5 overflow-hidden rounded-none bg-ink/10">
           <div
-            className="h-full rounded-full bg-[#b4530a] transition-all duration-300"
+            className="h-full rounded-none bg-accent transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -907,13 +907,13 @@ function HackView({
             const gAll = groupTotal > 0 && gDone === groupTotal;
             return (
               <section key={group.title}>
-                <div className="flex items-baseline justify-between border-b border-[#241c12]/15 pb-2">
-                  <h2 className="font-sans text-xs uppercase tracking-[0.25em] text-[#8a6d3b]">
+                <div className="flex items-baseline justify-between border-b border-ink/15 pb-2">
+                  <h2 className="font-sans text-xs uppercase tracking-[0.25em] text-muted">
                     {group.title}
                   </h2>
                   <span
                     className={`font-sans text-xs tabular-nums ${
-                      gAll ? "text-[#b4530a]" : "text-[#241c12]/40"
+                      gAll ? "text-accent" : "text-ink/40"
                     }`}
                   >
                     {gAll ? "done" : `${gDone}/${groupTotal}`}
@@ -930,17 +930,17 @@ function HackView({
                           data-check-key={itemKey}
                           onFocus={() => setFocusedCheckIndex(itemIndex)}
                           onClick={() => onToggle(itemKey)}
-                          className={`flex w-full items-center gap-4 rounded-md border px-4 py-4 text-left transition-colors sm:px-5 ${
+                          className={`flex w-full items-center gap-4 rounded-none border px-4 py-4 text-left transition-colors sm:px-5 ${
                             checked
-                              ? "border-[#b4530a]/20 bg-[#f3ecdf]"
-                              : "border-[#241c12]/15 bg-white/40 hover:border-[#241c12]/30 hover:bg-white/55"
+                              ? "border-accent/20 bg-panel-strong"
+                              : "border-ink/15 bg-panel/55 hover:border-ink/30 hover:bg-panel/80"
                           }`}
                         >
                           <span
-                            className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors ${
+                            className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-none border transition-colors ${
                               checked
-                                ? "border-[#b4530a] bg-[#b4530a] text-[#f6f1e7]"
-                                : "border-[#241c12]/30 bg-[#f6f1e7]/70"
+                                ? "border-accent bg-accent text-page"
+                                : "border-ink/30 bg-page/70"
                             }`}
                           >
                             {checked && <Check aria-hidden="true" size={15} strokeWidth={3} />}
@@ -948,14 +948,14 @@ function HackView({
                           <span
                             className={`flex-1 font-sans text-[15px] leading-6 ${
                               checked
-                                ? "text-[#241c12]/55"
-                                : "text-[#241c12]"
+                                ? "text-ink/55"
+                                : "text-ink"
                             }`}
                           >
                             {item.label}
                           </span>
                           {item.critical && !checked && (
-                            <span className="hidden flex-shrink-0 font-sans text-[10px] uppercase tracking-wider text-[#b4530a] sm:block">
+                            <span className="hidden flex-shrink-0 font-sans text-[10px] uppercase tracking-wider text-accent sm:block">
                               critical
                             </span>
                           )}
@@ -971,10 +971,10 @@ function HackView({
                     return (
                       <li key={todo.id}>
                         <div
-                          className={`flex items-center gap-2 rounded-md border px-4 py-3 transition-colors sm:px-5 ${
+                          className={`flex items-center gap-2 rounded-none border px-4 py-3 transition-colors sm:px-5 ${
                             checked
-                              ? "border-[#b4530a]/20 bg-[#f3ecdf]"
-                              : "border-[#241c12]/15 bg-white/40 hover:border-[#241c12]/30 hover:bg-white/55"
+                              ? "border-accent/20 bg-panel-strong"
+                              : "border-ink/15 bg-panel/55 hover:border-ink/30 hover:bg-panel/80"
                           }`}
                         >
                           <button
@@ -984,10 +984,10 @@ function HackView({
                             className="flex min-w-0 flex-1 items-center gap-4 text-left"
                           >
                             <span
-                              className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors ${
+                              className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-none border transition-colors ${
                                 checked
-                                  ? "border-[#b4530a] bg-[#b4530a] text-[#f6f1e7]"
-                                  : "border-[#241c12]/30 bg-[#f6f1e7]/70"
+                                  ? "border-accent bg-accent text-page"
+                                  : "border-ink/30 bg-page/70"
                               }`}
                             >
                               {checked && (
@@ -997,20 +997,20 @@ function HackView({
                             <span
                               className={`min-w-0 flex-1 font-sans text-[15px] leading-6 ${
                                 checked
-                                  ? "text-[#241c12]/55"
-                                  : "text-[#241c12]"
+                                  ? "text-ink/55"
+                                  : "text-ink"
                               }`}
                             >
                               {todo.label}
                             </span>
-                            <span className="hidden flex-shrink-0 font-sans text-[10px] uppercase tracking-wider text-[#241c12]/35 sm:block">
+                            <span className="hidden flex-shrink-0 font-sans text-[10px] uppercase tracking-wider text-ink/35 sm:block">
                               custom
                             </span>
                           </button>
                           <button
                             onClick={() => onRemoveCustomTodo(groupKey, todo.id)}
                             aria-label={`Remove custom todo: ${todo.label}`}
-                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-[#241c12]/38 transition-colors hover:bg-[#241c12]/7 hover:text-[#b4530a]"
+                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-none text-ink/38 transition-colors hover:bg-ink/7 hover:text-accent"
                           >
                             <X aria-hidden="true" size={16} />
                           </button>
@@ -1033,14 +1033,14 @@ function HackView({
           <button
             onClick={onPrev}
             disabled={phaseIdx === 0}
-            className="rounded-md px-3 py-2 text-left text-[#241c12]/60 enabled:hover:bg-[#241c12]/5 disabled:opacity-30"
+            className="rounded-none px-3 py-2 text-left text-ink/60 enabled:hover:bg-ink/5 disabled:opacity-30"
           >
             &lt;- {phaseIdx > 0 ? guide[phaseIdx - 1].title : "Beginning"}
           </button>
           <button
             onClick={onNext}
             disabled={phaseIdx === guide.length - 1}
-            className="rounded-md px-3 py-2 text-right text-[#241c12]/60 enabled:hover:bg-[#241c12]/5 disabled:opacity-30"
+            className="rounded-none px-3 py-2 text-right text-ink/60 enabled:hover:bg-ink/5 disabled:opacity-30"
           >
             {phaseIdx < guide.length - 1 ? guide[phaseIdx + 1].title : "Done"} -&gt;
           </button>
@@ -1049,18 +1049,18 @@ function HackView({
 
       <aside className="lg:pt-8">
         <div className="sticky top-32 space-y-4">
-          <section className="rounded-md border border-[#241c12]/15 bg-white/35 p-5">
-            <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-[#8a6d3b]">
+          <section className="rounded-none border border-ink/15 bg-panel/65 p-5">
+            <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">
               Total Progress
             </p>
-            <div className="mt-3 font-sans text-5xl tabular-nums text-[#241c12]">
+            <div className="mt-3 font-sans text-5xl tabular-nums text-ink">
               {totalDone}
-              <span className="text-2xl text-[#241c12]/30">/{totalChecks}</span>
+              <span className="text-2xl text-ink/30">/{totalChecks}</span>
             </div>
             <button
               onClick={() => setResetOpen(true)}
               disabled={totalDone === 0 && customCount === 0}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#241c12]/15 px-3 py-2.5 font-sans text-sm text-[#241c12]/65 transition-colors hover:border-[#b4530a]/45 hover:text-[#b4530a] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#241c12]/15 disabled:hover:text-[#241c12]/65"
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-none border border-ink/15 px-3 py-2.5 font-sans text-sm text-ink/65 transition-colors hover:border-accent/45 hover:text-accent disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-ink/15 disabled:hover:text-ink/65"
             >
               <Trash2 aria-hidden="true" size={15} />
               Clear checklist state
@@ -1113,7 +1113,7 @@ function AddCustomTodoForm({
   return (
     <form
       onSubmit={submit}
-      className="mt-3 flex flex-col gap-2 rounded-md border border-dashed border-[#241c12]/18 bg-[#efe7d6]/45 p-3 sm:flex-row"
+      className="mt-3 flex flex-col gap-2 rounded-none border border-dashed border-ink/18 bg-panel/45 p-3 sm:flex-row"
     >
       <label className="sr-only" htmlFor={inputId}>
         Add your own check to {groupTitle}
@@ -1124,12 +1124,12 @@ function AddCustomTodoForm({
         onChange={(event) => setLabel(event.target.value)}
         placeholder="Add your own check for this group"
         maxLength={180}
-        className="min-h-10 flex-1 rounded-md border border-[#241c12]/15 bg-white/45 px-3 font-sans text-sm text-[#241c12] outline-none transition-colors placeholder:text-[#241c12]/38 focus:border-[#b4530a]/65 focus:bg-white/65"
+        className="min-h-10 flex-1 rounded-none border border-ink/15 bg-panel/70 px-3 font-sans text-sm text-ink outline-none transition-colors placeholder:text-ink/38 focus:border-accent/65 focus:bg-panel-strong"
       />
       <button
         type="submit"
         disabled={label.trim().length === 0}
-        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#241c12] px-4 font-sans text-sm font-medium text-[#f6f1e7] transition-colors hover:bg-[#3a2c1c] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-[#241c12]"
+        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-none bg-accent px-4 font-sans text-sm font-medium text-page transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-accent"
       >
         <Plus aria-hidden="true" size={15} />
         Add
@@ -1158,30 +1158,30 @@ function ResetChecklistDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#241c12]/35 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-page/75 px-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="reset-checklist-title"
     >
-      <div className="w-full max-w-md rounded-lg border border-[#241c12]/15 bg-[#f6f1e7] p-6 shadow-2xl shadow-[#241c12]/20">
+      <div className="w-full max-w-md rounded-none border border-ink/15 bg-page p-6 shadow-2xl shadow-ink/20">
         <div className="flex items-start gap-4">
-          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-[#b4530a]/12 text-[#b4530a]">
+          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-none bg-accent/12 text-accent">
             <AlertTriangle aria-hidden="true" size={20} />
           </span>
           <div>
             <h2 id="reset-checklist-title" className="font-sans text-lg font-medium">
               Clear checklist state?
             </h2>
-            <p className="mt-2 font-sans text-sm leading-6 text-[#241c12]/68">
+            <p className="mt-2 font-sans text-sm leading-6 text-ink/68">
               Choose exactly what to clear in this browser. Built-in guide checks
               stay in the guide either way.
             </p>
-            <dl className="mt-4 grid gap-2 font-sans text-xs text-[#241c12]/58">
-              <div className="flex justify-between gap-4 rounded-md bg-white/35 px-3 py-2">
+            <dl className="mt-4 grid gap-2 font-sans text-xs text-ink/58">
+              <div className="flex justify-between gap-4 rounded-none bg-panel/70 px-3 py-2">
                 <dt>Completed progress</dt>
                 <dd className="tabular-nums">{progressLabel}</dd>
               </div>
-              <div className="flex justify-between gap-4 rounded-md bg-white/35 px-3 py-2">
+              <div className="flex justify-between gap-4 rounded-none bg-panel/70 px-3 py-2">
                 <dt>Your added todos</dt>
                 <dd className="tabular-nums">{customLabel}</dd>
               </div>
@@ -1191,21 +1191,21 @@ function ResetChecklistDialog({
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             onClick={onCancel}
-            className="rounded-md border border-[#241c12]/15 px-4 py-2.5 font-sans text-sm text-[#241c12]/70 transition-colors hover:bg-[#241c12]/5"
+            className="rounded-none border border-ink/15 px-4 py-2.5 font-sans text-sm text-ink/70 transition-colors hover:bg-ink/5"
           >
             Keep everything
           </button>
           <button
             onClick={onResetProgress}
             disabled={completedCount === 0}
-            className="rounded-md border border-[#241c12]/15 px-4 py-2.5 font-sans text-sm text-[#241c12]/70 transition-colors hover:border-[#b4530a]/45 hover:text-[#b4530a] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#241c12]/15 disabled:hover:text-[#241c12]/70"
+            className="rounded-none border border-ink/15 px-4 py-2.5 font-sans text-sm text-ink/70 transition-colors hover:border-accent/45 hover:text-accent disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-ink/15 disabled:hover:text-ink/70"
           >
             Clear completed checks only
           </button>
           <button
             onClick={onResetProgressAndCustomTodos}
             disabled={completedCount === 0 && customTodoCount === 0}
-            className="rounded-md bg-[#b4530a] px-4 py-2.5 font-sans text-sm font-medium text-[#f6f1e7] transition-colors hover:bg-[#8f3f08] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-[#b4530a]"
+            className="rounded-none bg-accent px-4 py-2.5 font-sans text-sm font-medium text-page transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-accent"
           >
             Clear checks and custom todos
           </button>
