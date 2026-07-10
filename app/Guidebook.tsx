@@ -63,17 +63,32 @@ export function Guidebook() {
     setViewState(nextMode, phaseIdx);
   };
 
+  // Resolve the phase index for any checklist key: `phaseIdx:groupIdx:itemIdx` (static) encodes it in
+  // the leading segment; `custom:<id>` requires looking the todo up in customTodos (its groupKey is
+  // `phaseIdx:groupIdx`). Returns undefined only if the key is unrecognized.
+  const phaseForKey = (key: string): number | undefined => {
+    if (/^\d+:/.test(key)) return Number.parseInt(key.split(":")[0], 10);
+    if (key.startsWith("custom:")) {
+      const todoId = key.slice("custom:".length);
+      for (const [groupKey, todos] of Object.entries(customTodos)) {
+        if (todos.some((todo) => todo.id === todoId)) {
+          return Number.parseInt(groupKey.split(":")[0], 10);
+        }
+      }
+    }
+    return undefined;
+  };
+
   const handleToggleCheck = (key: string) => {
-    // key is `phaseIdx:groupIdx:itemIdx` (static) or `custom:<id>`; the leading segment is the phase
-    // for static items only (custom-todo keys don't encode a phase).
-    const isStatic = /^\d+:/.test(key);
-    const phase = isStatic ? Number.parseInt(key.split(":")[0], 10) : undefined;
+    const phase = phaseForKey(key);
     const nowChecked = !done[key];
 
     void track("checklist_item_toggled", { phase, checked: nowChecked });
 
-    // Fire the phase-completion milestone when THIS toggle finishes the phase (transition only).
-    if (isStatic && phase !== undefined && nowChecked) {
+    // Fire the phase-completion milestone when THIS toggle finishes the phase (transition only, so it
+    // fires exactly once). Works for static and custom-todo toggles alike, since phaseForKey + the
+    // nextDone snapshot both account for custom todos.
+    if (phase !== undefined && nowChecked) {
       const nextDone = { ...done, [key]: true };
       if (
         !phaseComplete(phase, done, customTodos) &&

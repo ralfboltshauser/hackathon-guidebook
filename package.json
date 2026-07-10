@@ -13,7 +13,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm event-lint && pnpm duplication && pnpm build"
   },
   "engines": {
-    "node": "^20.20.0 || >=22.22.0"
+    "node": ">=20.9.0"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",

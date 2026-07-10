@@ -116,10 +116,14 @@ export async function initAnalytics(): Promise<void> {
   await load();
 }
 
-/** Capture a pageview for the current URL. Called on every App Router navigation. */
-export async function capturePageview(): Promise<void> {
+/**
+ * Capture a pageview. Called once per real path navigation (see PostHogPageView). Pass the URL
+ * captured synchronously at navigation time so two rapid navigations can't both resolve to the final
+ * `window.location`; omitting it lets posthog read the current location.
+ */
+export async function capturePageview(url?: string): Promise<void> {
   const p = await load();
-  p?.capture("$pageview");
+  p?.capture("$pageview", url ? { $current_url: url } : undefined);
 }
 
 /** Fire a typed funnel event (anonymous, cookieless). No-op for unknown/server-only names. */

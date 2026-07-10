@@ -1,23 +1,25 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { capturePageview } from "@/lib/analytics";
 
 /**
- * Fires a cookieless `$pageview` on the initial load and on every App Router client navigation.
- * Split out (and Suspense-wrapped by the provider) because `useSearchParams()` opts the subtree into
- * client rendering — isolating it here keeps the rest of the tree statically rendered.
+ * Fires a cookieless `$pageview` on initial load and on every real App Router **path** navigation.
+ *
+ * Deliberately depends on `pathname` only — NOT `useSearchParams`. Tab/phase view state lives in the
+ * query string, written with `history.replaceState` (see `lib/guidebook.ts` → `writeViewStateToUrl`),
+ * and Next.js syncs those shallow updates into `useSearchParams`. Depending on search params would
+ * therefore emit a spurious pageview on every Learn↔Hack switch, Prev/Next, and even Learn-view scroll
+ * (its IntersectionObserver rewrites `?phase=N`) — inflating pageviews and corrupting session duration.
+ * The full URL (query string included, e.g. UTMs) is still captured via `window.location.href`.
  */
 export function PostHogPageView() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // pathname/searchParams already reflect the new URL by the time this runs, so posthog reads the
-    // correct location. capturePageview() awaits SDK init internally, so an early call is safe.
-    void capturePageview();
-  }, [pathname, searchParams]);
+    void capturePageview(window.location.href);
+  }, [pathname]);
 
   return null;
 }

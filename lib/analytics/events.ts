@@ -23,6 +23,12 @@ export const EVENTS = {
   deep_dive_view: "deep_dive_view",
   /** Light/dark theme was switched. Props: `theme`. */
   theme_toggled: "theme_toggled",
+  /**
+   * A call-to-action was clicked. Fired automatically for any element carrying a `data-cta`
+   * attribute (see `app/TrackClicks.tsx`) — add the attribute, no per-CTA wiring. Props: `location`
+   * (the `data-cta` label), `target` (its href, if any).
+   */
+  cta_click: "cta_click",
 } as const;
 
 export type EventName = keyof typeof EVENTS;
@@ -36,6 +42,7 @@ export const CLIENT_EVENTS: readonly EventName[] = [
   "checklist_reset",
   "deep_dive_view",
   "theme_toggled",
+  "cta_click",
 ];
 
 /** Event property dictionary. Keep additive; never add a key that could carry PII. */
@@ -52,6 +59,10 @@ export interface EventProps {
   slug?: string;
   /** Active theme after a toggle (theme_toggled). */
   theme?: "light" | "dark";
+  /** The `data-cta` label of a clicked call-to-action (cta_click), e.g. 'header-hack-tab'. */
+  location?: string;
+  /** Where a clicked CTA points (cta_click) — its href, if any. */
+  target?: string;
   [key: string]: unknown;
 }
 

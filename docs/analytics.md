@@ -23,7 +23,7 @@ identified/consented tier, which is deliberately **not** wired here.
 
 | Signal | Event | How it works |
 | --- | --- | --- |
-| **Page opens** | `$pageview` | Fired on first load **and** every App Router client navigation (`PostHogPageView`). |
+| **Page opens** | `$pageview` | Fired on first load and on every real **path** navigation (`PostHogPageView`). Tab/phase changes live in the query string and intentionally do **not** count as new page opens. |
 | **Session duration / bounce** | `$pageleave` | PostHog pairs pageview→pageleave per session to compute time-on-page, session duration, and bounce rate. |
 | **Load performance** | `$web_vitals` | LCP / CLS / INP / FCP per page open (`capture_performance`). No PII. |
 | **Heatmaps** | `$heatmap` | Cookieless coordinate stream (clicks/scroll positions) — no element text, no PII. |
@@ -61,8 +61,9 @@ never `posthog-js` directly — so swapping providers is a one-file change and s
 | `lib/analytics/client.ts` | Cookieless init, heatmaps/web-vitals/errors, `beforeSend` noise filter, `track()`, `captureException()`. |
 | `lib/analytics/index.ts` | Barrel — the only import surface for components. |
 | `app/PostHogProvider.tsx` | Boots the SDK after hydration (own async chunk, off the critical path). |
-| `app/PostHogPageView.tsx` | Fires `$pageview` on navigation (Suspense-wrapped so pages stay static). |
+| `app/PostHogPageView.tsx` | Fires `$pageview` on **path** navigations only (depends on `pathname`, not search params — so tab/phase `replaceState` writes don't inflate pageviews). |
 | `app/TrackView.tsx` | Fire-once view event for Server Component pages (e.g. `deep_dive_view`). |
+| `app/TrackClicks.tsx` | Delegated `data-cta` → `cta_click` listener (declarative CTA tracking). |
 | `app/error.tsx` / `app/global-error.tsx` | Report render errors that React swallows in production. |
 | `scripts/event-lint.mjs` | Build gate: rejects unknown event names and PII-looking keys. |
 
@@ -83,6 +84,7 @@ for views). **No PII** in names or property keys — enforced by `pnpm event-lin
 | `checklist_reset` | `scope` | Progress is reset |
 | `deep_dive_view` | `slug` | A deep-dive article opens |
 | `theme_toggled` | `theme` | Light/dark switch |
+| `cta_click` | `location`, `target` | Any element with `data-cta` is clicked (declarative — see below) |
 
 ## How-to: add a new event
 
@@ -108,6 +110,97 @@ for views). **No PII** in names or property keys — enforced by `pnpm event-lin
 **Cookieless invariants — do not change in `client.ts`:** `autocapture: false`,
 `persistence: 'memory'`, `cookieless_mode: 'always'`, `disable_session_recording: true`. Enabling
 replay or an identified tier requires a real consent flow first.
+
+## Helpers (the analytics port API)
+
+Import everything from `@/lib/analytics` — never `posthog-js` directly. This is the full surface for
+event-driven work; you rarely need more than `track()`.
+
+| Helper | Use it for |
+| --- | --- |
+| `track(event, props)` | Fire a typed product event from a Client Component. Unknown names are ignored (and warn in dev). |
+| `<TrackView event props />` | Fire a one-off view event from a **Server Component** page (e.g. `deep_dive_view`) without making it a client component. |
+| `data-cta="label"` (+ `<TrackClicks/>`) | **Declarative** CTA tracking. Add the attribute to any element; the delegated listener mounted in `PostHogProvider` fires `cta_click`. No import, no wiring. |
+| `captureException(error, ctx)` | Report a caught error to Error Tracking. Used by the error boundaries; call it from your own `try/catch` when you swallow an error. |
+| `getFlag(key)` | Read a PostHog **feature flag** (cookieless-safe) — the basis for future A/B tests and gradual rollouts. |
+| `capturePageview()` | Manual pageview. Already wired globally; you won't normally call it. |
+
+### Declarative CTA example
+
+```tsx
+// Any element — link or button. No import needed.
+<a href="/deep-dives" data-cta="home-deep-dives">Read the deep dives</a>
+```
+
+This emits `cta_click` with `location: "home-deep-dives"` and `target: "/deep-dives"`. Prefer this
+over hand-wiring `onClick={() => track("cta_click", …)}` for navigational CTAs.
+
+## What to capture (and what not to)
+
+The goal is a small set of **decision-driving** events, not telemetry for its own sake. Before adding
+an event, ask: *what decision would this change?* If nothing, don't capture it.
+
+**Principles**
+
+- **Funnel milestones over micro-interactions.** `checklist_phase_completed` tells you more than
+  logging every scroll. Capture the steps of the journey you want to improve.
+- **One event, rich properties.** Prefer `checklist_item_toggled { phase, checked }` over five
+  per-phase event names. Properties are free to break down in analysis; new event names are not.
+- **Never PII.** No email/name/phone/IP in names or props. Heatmaps and web vitals are already
+  PII-free. `event-lint` blocks violations at build time.
+- **Idempotent milestones.** Fire completion/conversion events on the *transition* only (see the
+  phase-completion guard in `Guidebook.tsx`), so counts aren't inflated by re-renders.
+
+**Recommended events to add as the product grows** (already easy with the helpers above):
+
+| Candidate event | Props | Why it's worth capturing |
+| --- | --- | --- |
+| `cta_click` (live) | `location`, `target` | Which CTAs actually get clicked — add `data-cta` to hero/nav/footer CTAs. |
+| `phase_opened` | `phase`, `tab` | Entry funnel per phase — where people start and drop off. |
+| `guide_completed` | — | The top-line success metric: someone finished every checklist. |
+| `outbound_link_click` | `location`, `target` | Which external references pull people off-site. |
+| `search_performed` | `has_results` | If/when search ships — intent signal, no query text (PII-safe). |
+| `share_clicked` | `channel` | Virality/word-of-mouth loop. |
+
+To add any of these: extend `EVENTS`/`EventProps` in `events.ts`, fire via `track()` (or `data-cta`),
+run `pnpm event-lint`.
+
+**Later tiers (out of scope today, seams exist):**
+
+- **Server-side conversion events** — when a backend exists, capture un-spoofable conversions with
+  `posthog-node` (`flushAt:1`, wrap in `waitUntil`). No server runtime here yet, so this is a note,
+  not code.
+- **Identified / session-replay tier** — requires a real consent flow first; the cookieless base tier
+  must stay banner-free.
+
+## Analyzing the data
+
+Everything below lives in the PostHog app (project 220518) or is reachable from Claude Code via the
+**PostHog MCP** — ask in natural language and it runs the query for you.
+
+| Question | Where / how |
+| --- | --- |
+| Traffic, top pages, session duration, bounce | **Web Analytics** dashboard (auto from `$pageview`/`$pageleave`). |
+| Load performance (LCP/CLS/INP) | **Web Vitals** insight (auto from `$web_vitals`). |
+| Where people drop off | **Funnel** insight: e.g. `$pageview` → `tab_switched(hack)` → `checklist_item_toggled` → `checklist_phase_completed`. |
+| Which phases get completed most | **Breakdown** on `checklist_phase_completed` by the `phase` property, or HogQL. |
+| Where users click / scroll | **Heatmaps** via the PostHog Toolbar on the live site. |
+| Top production errors | **Error tracking** (stack traces readable once source maps upload). |
+| Anything ad-hoc | **HogQL** (SQL over the events table). |
+
+**HogQL example — checklist completion by phase, last 30 days:**
+
+```sql
+select properties.phase as phase, count() as completions
+from events
+where event = 'checklist_phase_completed' and timestamp > now() - interval 30 day
+group by phase
+order by phase
+```
+
+**From Claude Code:** run `/mcp`, log in, then ask e.g. *"show pageviews and session duration for the
+last 7 days in project 220518"* or *"top 5 errors this week"*. The `pulse` skill documents more query
+patterns and guards the cookieless invariants.
 
 ## Setup and configuration
 

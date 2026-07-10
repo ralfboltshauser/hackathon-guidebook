@@ -1,26 +1,34 @@
 #!/usr/bin/env node
 /**
  * event-lint — the analytics taxonomy gate. Fails if any track()/capture() call uses a name outside
- * the frozen EVENTS enum (lib/analytics/events.ts), or any event property key looks like PII. This
- * site is cookieless-by-default; no raw email/phone/name/ip should ever reach an event.
+ * the frozen EVENTS enum (lib/analytics/events.ts), or passes a PII-looking property key. This site is
+ * cookieless-by-default; no raw email/phone/name/ip should ever reach an event.
  *
+ * Design: checks are scoped to the ARGUMENTS of each track()/capture() call (extracted by balancing
+ * parens + skipping string literals), not the whole file. That means:
+ *   - multi-line calls and namespaced keys (`phone_number`, `"user_email"`) are caught, and
+ *   - UI text / comments / placeholders like `<label>Email:</label>` never false-positive,
+ *     because they aren't inside a track() call.
  * Ported from the NoaIQ marketing site. Run: `pnpm event-lint`.
- *
- * Scans the FULL file text (not line-by-line) so that `track(` / `capture(` calls whose name sits on
- * the next line are still caught, and so quoted PII keys (`"email":`) are caught alongside bare ones.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { argv } from "node:process";
 import { pathToFileURL } from "node:url";
 
-/** PII property-key words. Matched with an optional surrounding quote and a following colon. */
-const PII_WORDS =
-  "email|phone|first_?name|last_?name|full_?name|ip_address|raw_email|password";
-// e.g.  email:   "email":   'phone' :   — but NOT email_sha256 (word boundary before the quote/colon).
-const PII_KEY = new RegExp(`(["']?)(${PII_WORDS})\\1\\s*:`, "gi");
-// track("name" | capture('name' — allows whitespace/newlines between ( and the quote.
-const CALL = /\b(?:track|capture)\(\s*['"]([^'"]+)['"]/g;
+/**
+ * A property key is PII if one of its `_`-delimited tokens is a PII word. Token boundaries prevent
+ * false positives like `telephone`→`phone` handled as substrings (`microphone`/`headphone` never match)
+ * while catching `phone_number`, `email_address`, `user_email`, `home_phone`, etc.
+ */
+const PII_TOKEN =
+  /(?:^|_)(email|phone|telephone|mobile|password|passwd|pwd|ssn|dob|firstname|lastname|fullname|surname)(?:_|$)|(?:^|_)(first|last|full)_?name(?:_|$)|(?:^|_)ip(?:_?addr(?:ess)?)?(?:_|$)/i;
+
+function isPiiKey(key) {
+  // The hashed email form (and any *_hash/_sha256 key) is the allowed, non-PII shape.
+  if (key === "email_sha256" || /_(sha256|hash|hashed)$/i.test(key)) return false;
+  return PII_TOKEN.test(key);
+}
 
 /** Parse the allowed event names from the EVENTS enum source. */
 export function parseAllowed(eventsSrc) {
@@ -31,8 +39,43 @@ export function parseAllowed(eventsSrc) {
 /** 1-based line number for a character offset in `text`. */
 function lineAt(text, index) {
   let line = 1;
-  for (let i = 0; i < index && i < text.length; i++) if (text[i] === "\n") line++;
+  for (let i = 0; i < index; i++) if (text[i] === "\n") line++;
   return line;
+}
+
+/**
+ * Extract each track()/capture() call as { nameStart, argsStart, args } by scanning from `(` and
+ * balancing parens while skipping string/template literals. Bails on a call that doesn't close within
+ * a sane window (treated as unparseable rather than over-scanning the file).
+ */
+function extractCalls(text) {
+  const calls = [];
+  const head = /\b(?:track|capture)\(/g;
+  let m;
+  while ((m = head.exec(text))) {
+    const open = m.index + m[0].length - 1; // index of '('
+    let depth = 0;
+    let str = null; // current string delimiter, or null
+    let i = open;
+    const limit = Math.min(text.length, open + 5000);
+    for (; i < limit; i++) {
+      const ch = text[i];
+      if (str) {
+        if (ch === str && text[i - 1] !== "\\") str = null;
+        continue;
+      }
+      if (ch === '"' || ch === "'" || ch === "`") str = ch;
+      else if (ch === "(") depth++;
+      else if (ch === ")" && --depth === 0) {
+        i++;
+        break;
+      }
+    }
+    if (depth === 0 && i > open) {
+      calls.push({ nameStart: m.index, argsStart: open + 1, args: text.slice(open + 1, i - 1) });
+    }
+  }
+  return calls;
 }
 
 /** Pure: lint one file's text → problem strings. The analytics port itself is exempt. */
@@ -40,19 +83,20 @@ export function lintText(rel, text, allowed) {
   if (rel.startsWith("lib/analytics/")) return [];
   const problems = [];
 
-  for (const m of text.matchAll(CALL)) {
-    const name = m[1];
-    if (!name.startsWith("$") && !allowed.has(name)) {
-      problems.push(`${rel}:${lineAt(text, m.index)}  unknown event "${name}"`);
+  for (const call of extractCalls(text)) {
+    // Event name: only a leading string LITERAL is validated (a variable/template name can't be).
+    const name = call.args.match(/^\s*['"]([^'"]+)['"]/);
+    if (name && !name[1].startsWith("$") && !allowed.has(name[1])) {
+      problems.push(`${rel}:${lineAt(text, call.nameStart)}  unknown event "${name[1]}"`);
     }
-  }
-
-  for (const m of text.matchAll(PII_KEY)) {
-    // `email_sha256` is the one allowed hashed form; the \b in the match already excludes it, but
-    // keep an explicit guard in case the surrounding token changes.
-    const around = text.slice(m.index, m.index + m[0].length + 8);
-    if (/sha256/i.test(around)) continue;
-    problems.push(`${rel}:${lineAt(text, m.index)}  PII-looking property key "${m[2]}"`);
+    // PII property keys inside THIS call's argument object (quoted or bare).
+    for (const k of call.args.matchAll(/(["'`]?)([A-Za-z_$][\w$]*)\1\s*:/g)) {
+      if (isPiiKey(k[2])) {
+        problems.push(
+          `${rel}:${lineAt(text, call.argsStart + k.index)}  PII-looking property key "${k[2]}"`,
+        );
+      }
+    }
   }
 
   return problems;
