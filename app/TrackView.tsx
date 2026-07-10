@@ -9,11 +9,15 @@ import { type EventName, type EventProps, track } from "@/lib/analytics";
  * the article slug), without turning the whole page into a Client Component. Renders nothing.
  */
 export function TrackView({ event, props }: { event: EventName; props?: EventProps }) {
+  // Serialize props for the dep so the event re-fires when the identifying data changes. Navigating
+  // deep-dive → deep-dive reuses this component instance (same `[slug]` segment, no remount), so a
+  // `[event]`-only dep would silently drop every article view after the first.
+  const propsKey = JSON.stringify(props ?? {});
   useEffect(() => {
     void track(event, props);
-    // Fire once per mount; props is a fresh object each render, so intentionally not a dependency.
+    // propsKey (a stable string) is the dep, not the fresh `props` object → one fire per unique view.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [event]);
+  }, [event, propsKey]);
 
   return null;
 }

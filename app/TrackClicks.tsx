@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { track } from "@/lib/analytics";
+import { sanitizeUrl, track } from "@/lib/analytics";
 
 /**
  * Headless, declarative CTA tracking. ONE delegated capture-phase listener means any element (or its
@@ -17,9 +17,11 @@ export function TrackClicks() {
     const onClick = (event: MouseEvent) => {
       const el = (event.target as Element | null)?.closest<HTMLElement>("[data-cta]");
       if (!el) return;
+      const href = el.getAttribute("href");
       void track("cta_click", {
         location: el.dataset.cta,
-        target: el.getAttribute("href") ?? undefined,
+        // Strip any query/fragment PII from the href before it becomes an event property.
+        target: href ? (sanitizeUrl(href) as string) : undefined,
       });
     };
     document.addEventListener("click", onClick, true);

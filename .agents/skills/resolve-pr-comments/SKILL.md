@@ -18,7 +18,7 @@ same name.
 
 ## Prerequisites
 
-- `gh` authenticated with `repo` scope (`gh auth status`), and `jq`.
+- `gh` authenticated with `repo` scope (`gh auth status`).
 - You're on the PR's branch, or you pass `--repo owner/repo` to the scripts.
 
 ## Workflow

@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 /**
- * event-lint — the analytics taxonomy gate. Fails if any track()/capture() call uses a name outside
- * the frozen EVENTS enum (lib/analytics/events.ts), or passes a PII-looking property key. This site is
- * cookieless-by-default; no raw email/phone/name/ip should ever reach an event.
+ * event-lint — the analytics taxonomy + PII gate. Fails if any track()/capture() call uses a name
+ * outside the frozen EVENTS enum (lib/analytics/events.ts), or passes a PII-looking property key.
+ * The site is cookieless-by-default; no raw email/phone/name/ip should ever reach an event.
  *
- * Design: checks are scoped to the ARGUMENTS of each track()/capture() call (extracted by balancing
- * parens + skipping string literals), not the whole file. That means:
- *   - multi-line calls and namespaced keys (`phone_number`, `"user_email"`) are caught, and
- *   - UI text / comments / placeholders like `<label>Email:</label>` never false-positive,
- *     because they aren't inside a track() call.
+ * Uses a small tokenizer (comments skipped; strings tokenized with proper escape handling) instead of
+ * raw-text regexes, so it does NOT: false-fail on a PII word inside a string VALUE or a COMMENT
+ * (e.g. `location: "email:footer"`, `// track("old")`); nor silently fail OPEN when a string arg
+ * contains an escaped quote/backslash. A property key is only counted in real object-key position
+ * (preceded by `{` or `,`, followed by `:`), so ternary/label colons don't false-positive.
+ *
+ * Known static-analysis limits (documented, not bugs): dynamic event names (a variable or template
+ * literal) and computed keys (`["x"]:`) can't be validated; `$`-prefixed names are always allowed.
  * Ported from the NoaIQ marketing site. Run: `pnpm event-lint`.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -16,17 +19,13 @@ import { join, relative, sep } from "node:path";
 import { argv } from "node:process";
 import { pathToFileURL } from "node:url";
 
-/**
- * A property key is PII if one of its `_`-delimited tokens is a PII word. Token boundaries prevent
- * false positives like `telephone`→`phone` handled as substrings (`microphone`/`headphone` never match)
- * while catching `phone_number`, `email_address`, `user_email`, `home_phone`, etc.
- */
+/** A property key is PII if a `_`-delimited token is a PII word. Boundaries avoid `microphone`→`phone`
+ *  etc.; `mobile`/`zip` deliberately excluded (viewport/postcode ambiguity). */
 const PII_TOKEN =
-  /(?:^|_)(email|phone|telephone|mobile|password|passwd|pwd|ssn|dob|firstname|lastname|fullname|surname)(?:_|$)|(?:^|_)(first|last|full)_?name(?:_|$)|(?:^|_)ip(?:_?addr(?:ess)?)?(?:_|$)/i;
+  /(?:^|_)(email|phone|telephone|password|passwd|pwd|ssn|dob|firstname|lastname|fullname|surname)(?:_|$)|(?:^|_)(first|last|full)_?name(?:_|$)|(?:^|_)ip(?:_?addr(?:ess)?)?(?:_|$)/i;
 
 function isPiiKey(key) {
-  // The hashed email form (and any *_hash/_sha256 key) is the allowed, non-PII shape.
-  if (key === "email_sha256" || /_(sha256|hash|hashed)$/i.test(key)) return false;
+  if (key === "email_sha256" || /_(sha256|hash|hashed)$/i.test(key)) return false; // hashed forms are ok
   return PII_TOKEN.test(key);
 }
 
@@ -43,58 +42,95 @@ function lineAt(text, index) {
   return line;
 }
 
-/**
- * Extract each track()/capture() call as { nameStart, argsStart, args } by scanning from `(` and
- * balancing parens while skipping string/template literals. Bails on a call that doesn't close within
- * a sane window (treated as unparseable rather than over-scanning the file).
- */
-function extractCalls(text) {
-  const calls = [];
-  const head = /\b(?:track|capture)\(/g;
-  let m;
-  while ((m = head.exec(text))) {
-    const open = m.index + m[0].length - 1; // index of '('
-    let depth = 0;
-    let str = null; // current string delimiter, or null
-    let i = open;
-    const limit = Math.min(text.length, open + 5000);
-    for (; i < limit; i++) {
-      const ch = text[i];
-      if (str) {
-        if (ch === str && text[i - 1] !== "\\") str = null;
-        continue;
+/** Tokenize JS/TS into { type: 'string'|'ident'|'punct', text, quote?, index }. Comments are dropped;
+ *  string escapes (`\"`, `\\`) are handled so a string can't run past its terminator. */
+function tokenize(src) {
+  const toks = [];
+  const n = src.length;
+  let i = 0;
+  while (i < n) {
+    const c = src[i];
+    if (c === "/" && src[i + 1] === "/") {
+      i += 2;
+      while (i < n && src[i] !== "\n") i++;
+    } else if (c === "/" && src[i + 1] === "*") {
+      i += 2;
+      while (i < n && !(src[i] === "*" && src[i + 1] === "/")) i++;
+      i += 2;
+    } else if (c === '"' || c === "'" || c === "`") {
+      const index = i;
+      const quote = c;
+      i++;
+      let text = "";
+      while (i < n) {
+        if (src[i] === "\\") {
+          text += src[i + 1] ?? "";
+          i += 2;
+        } else if (src[i] === quote) {
+          i++;
+          break;
+        } else {
+          text += src[i];
+          i++;
+        }
       }
-      if (ch === '"' || ch === "'" || ch === "`") str = ch;
-      else if (ch === "(") depth++;
-      else if (ch === ")" && --depth === 0) {
+      toks.push({ type: "string", text, quote, index });
+    } else if (/[A-Za-z_$]/.test(c)) {
+      const index = i;
+      let text = "";
+      while (i < n && /[\w$]/.test(src[i])) {
+        text += src[i];
         i++;
-        break;
       }
-    }
-    if (depth === 0 && i > open) {
-      calls.push({ nameStart: m.index, argsStart: open + 1, args: text.slice(open + 1, i - 1) });
+      toks.push({ type: "ident", text, index });
+    } else if (/\s/.test(c)) {
+      i++;
+    } else {
+      toks.push({ type: "punct", text: c, index: i });
+      i++;
     }
   }
-  return calls;
+  return toks;
 }
+
+const isPunct = (tok, ch) => tok?.type === "punct" && tok.text === ch;
 
 /** Pure: lint one file's text → problem strings. The analytics port itself is exempt. */
 export function lintText(rel, text, allowed) {
   if (rel.startsWith("lib/analytics/")) return [];
+  const toks = tokenize(text);
   const problems = [];
 
-  for (const call of extractCalls(text)) {
-    // Event name: only a leading string LITERAL is validated (a variable/template name can't be).
-    const name = call.args.match(/^\s*['"]([^'"]+)['"]/);
-    if (name && !name[1].startsWith("$") && !allowed.has(name[1])) {
-      problems.push(`${rel}:${lineAt(text, call.nameStart)}  unknown event "${name[1]}"`);
+  for (let t = 0; t < toks.length; t++) {
+    const tok = toks[t];
+    const isCall =
+      tok.type === "ident" && (tok.text === "track" || tok.text === "capture") && isPunct(toks[t + 1], "(");
+    if (!isCall) continue;
+
+    // Event name = first arg, only if it's a plain (non-template) string literal.
+    const first = toks[t + 2];
+    if (first?.type === "string" && first.quote !== "`") {
+      if (!first.text.startsWith("$") && !allowed.has(first.text)) {
+        problems.push(`${rel}:${lineAt(text, tok.index)}  unknown event "${first.text}"`);
+      }
     }
-    // PII property keys inside THIS call's argument object (quoted or bare).
-    for (const k of call.args.matchAll(/(["'`]?)([A-Za-z_$][\w$]*)\1\s*:/g)) {
-      if (isPiiKey(k[2])) {
-        problems.push(
-          `${rel}:${lineAt(text, call.argsStart + k.index)}  PII-looking property key "${k[2]}"`,
-        );
+
+    // Walk the call's arg tokens (balanced parens) for PII property keys in real key position:
+    // a bare ident or quoted string, preceded by `{`/`,` and followed by `:`.
+    let depth = 0;
+    for (let j = t + 1; j < toks.length; j++) {
+      const a = toks[j];
+      if (isPunct(a, "(")) depth++;
+      else if (isPunct(a, ")")) {
+        if (--depth === 0) break;
+      } else if (
+        (a.type === "ident" || a.type === "string") &&
+        isPunct(toks[j + 1], ":") &&
+        (isPunct(toks[j - 1], "{") || isPunct(toks[j - 1], ","))
+      ) {
+        if (isPiiKey(a.text)) {
+          problems.push(`${rel}:${lineAt(text, a.index)}  PII-looking property key "${a.text}"`);
+        }
       }
     }
   }
@@ -108,8 +144,7 @@ function walk(dir) {
     if (entry === "node_modules" || entry.startsWith(".")) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) out.push(...walk(full));
-    // Cover every source extension the repo can execute (tsconfig allowJs + next pageExtensions),
-    // so a track() call in a .js/.jsx/.mjs/.mts file can't slip past the gate.
+    // Cover every source extension the repo can execute (tsconfig allowJs + next pageExtensions).
     else if (/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/.test(full) && !/\.test\./.test(full)) out.push(full);
   }
   return out;

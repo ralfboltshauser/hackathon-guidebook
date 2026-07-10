@@ -19,11 +19,11 @@ This keeps the funnel measurable without the consent-gate friction that tanks co
 The trade-off: no cross-visit retention, no lead-level attribution, no session replay. Those need an
 identified/consented tier, which is deliberately **not** wired here.
 
-**URL/PII safety.** PostHog sends the full `location.href` as `$current_url` (plus referrer and the
-heatmap URL key). A link like `/?email=alice@example.com#token` would otherwise leak PII, so
-`beforeSend` (in `client.ts`) strips the fragment and drops every query param outside an allowlist
-(`utm_*`, `ref`, `tab`, `phase`) from all URL-bearing properties and heatmap keys, with
-`mask_personal_data_properties` on as defense in depth.
+**URL/PII safety.** PostHog sends the full `location.href` as `$current_url` (plus referrer, the
+heatmap URL key, and nested copies inside web-vitals events). A link like `/?email=alice@example.com#token`
+would otherwise leak PII, so `beforeSend` (in `client.ts`) **recursively** strips the fragment and drops
+every query param outside a narrow allowlist (`utm_*`, `tab`, `phase`) from all URL-bearing properties,
+at any nesting depth. `mask_personal_data_properties` (ad-click IDs) is on as defense in depth.
 
 ## What gets captured
 

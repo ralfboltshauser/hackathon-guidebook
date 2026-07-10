@@ -60,17 +60,20 @@ export function isPageLikelyTranslated(): boolean {
   return document.querySelector("font") !== null; // translators wrap swapped text in <font>
 }
 
-/** Query params kept on URL-bearing properties (attribution + app view state); all others dropped. */
-const QUERY_ALLOWLIST = /^(utm_|gclid$|fbclid$|ref$|tab$|phase$)/i;
-/** PostHog properties (and heatmap keys) that carry a URL and could otherwise leak query/fragment PII. */
-const URL_PROPS = [
+/** Query params kept on URL-bearing properties (standard UTM attribution + our app view state); all
+ *  others are dropped. Deliberately narrow — `ref`/ad-click ids can carry personal data. */
+const QUERY_ALLOWLIST = /^(utm_|tab$|phase$)/i;
+/** URL-bearing PostHog keys to sanitize WHEREVER they appear — top-level and nested (e.g. the per-metric
+ *  `$current_url` inside a `$web_vitals` event, or `$set_once` initial URLs if person-processing is ever
+ *  enabled). Sanitization recurses, so a new nested URL property is covered without listing its path. */
+const URL_KEYS = new Set([
   "$current_url",
   "$referrer",
   "$pathname",
   "$initial_current_url",
   "$initial_referrer",
   "$initial_pathname",
-];
+]);
 
 /**
  * Strip the fragment and any non-allowlisted query params from a URL/path string, so a link such as
@@ -88,6 +91,31 @@ export function sanitizeUrl(value: unknown): unknown {
     return u.host === "_" ? `${u.pathname}${u.search}` : `${u.origin}${u.pathname}${u.search}`;
   } catch {
     return value.split("#")[0];
+  }
+}
+
+/**
+ * Recursively strip query/fragment PII from every URL-bearing property (see `URL_KEYS`) and every
+ * heatmap URL key, at any nesting depth — posthog-js also embeds `$current_url` inside nested objects
+ * like `$web_vitals_LCP_event`, which a top-level-only pass would miss. Mutates in place; depth-bounded
+ * so a malformed payload can't cause runaway recursion.
+ */
+function sanitizeProps(obj: Record<string, unknown>, depth = 0): void {
+  if (depth > 4) return;
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === "string") {
+      if (URL_KEYS.has(key)) obj[key] = sanitizeUrl(value) as string;
+    } else if (value && typeof value === "object") {
+      if (key === "$heatmap_data") {
+        const clean: Record<string, unknown> = {};
+        for (const [url, data] of Object.entries(value as Record<string, unknown>)) {
+          clean[String(sanitizeUrl(url))] = data;
+        }
+        obj[key] = clean;
+      } else {
+        sanitizeProps(value as Record<string, unknown>, depth + 1);
+      }
+    }
   }
 }
 
@@ -111,19 +139,7 @@ export function beforeSend(
     if (value && EXCEPTION_NETWORK_NOISE.test(value)) return null;
     if (value && REACT_HYDRATION_ERROR.test(value) && isTranslated()) return null;
   }
-  const props = payload.properties;
-  if (props) {
-    for (const key of URL_PROPS) {
-      if (typeof props[key] === "string") props[key] = sanitizeUrl(props[key]);
-    }
-    // Heatmap coordinate data is keyed by the full page URL — sanitize those keys too.
-    const heatmap = props.$heatmap_data;
-    if (heatmap && typeof heatmap === "object") {
-      const clean: Record<string, unknown> = {};
-      for (const [url, data] of Object.entries(heatmap)) clean[String(sanitizeUrl(url))] = data;
-      props.$heatmap_data = clean;
-    }
-  }
+  if (payload.properties) sanitizeProps(payload.properties);
   return payload;
 }
 
@@ -151,8 +167,8 @@ function load(): Promise<PostHog | null> {
           disable_session_recording: true, // replay is consent-only — off by default
           // capture_heatmaps is a valid runtime option, sometimes missing from the d.ts
           capture_heatmaps: true as never, // coordinate-stream heatmap is cookieless-safe (no element/PII)
-          // Mask common PII patterns in captured URLs/properties (defense in depth; beforeSend also
-          // strips query/fragment PII from URL props + heatmap keys).
+          // Masks known ad-click IDs (gclid/fbclid/…) in URLs. `beforeSend` (→ sanitizeProps) does the
+          // real work: it recursively strips the fragment + every non-allowlisted query param.
           mask_personal_data_properties: true as never,
           before_send: beforeSend as never,
         });

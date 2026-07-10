@@ -46,7 +46,7 @@ add it + `POSTHOG_PROJECT_ID` to Vercel, redeploy. Nothing else.
 ~1/3 of visitors block `eu.i.posthog.com`. Two ways to proxy through your own origin — pick one:
 
 **A. Path proxy — no DNS, available now.** The `/ingest` rewrite is already in `next.config.ts`. Set
-`NEXT_PUBLIC_POSTHOG_HOST=/ingest` in Vercel, and add `skipTrailingSlashRedirect: true` back to
+`NEXT_PUBLIC_POSTHOG_HOST=/ingest` in Vercel, and add `skipTrailingSlashRedirect: true` to
 `next.config.ts` (PostHog POSTs must keep trailing slashes). Same-origin, zero DNS. Simplest.
 
 **B. Subdomain — needs DNS (admin).** Use a first-party subdomain like `ph.hackathon-guidebook.com`:
@@ -67,5 +67,5 @@ now; move to **B** when DNS access is available.
 - [ ] `NEXT_PUBLIC_POSTHOG_KEY` set in Vercel (Production + Preview) → analytics live
 - [ ] Web Analytics / Heatmaps / Error tracking on; replay off; domains authorized
 - [ ] `POSTHOG_API_KEY` (Error-tracking write) + `POSTHOG_PROJECT_ID` set → readable error traces
-- [ ] Optional: `NEXT_PUBLIC_POSTHOG_HOST=/ingest` (+ re-add `skipTrailingSlashRedirect`) for ad-blocker resistance
+- [ ] Optional: `NEXT_PUBLIC_POSTHOG_HOST=/ingest` (+ add `skipTrailingSlashRedirect`) for ad-blocker resistance
 - [ ] Redeploy; confirm a `$pageview` and a test error land in project `220518`
