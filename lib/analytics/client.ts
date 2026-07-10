@@ -60,12 +60,9 @@ export function isPageLikelyTranslated(): boolean {
   return document.querySelector("font") !== null; // translators wrap swapped text in <font>
 }
 
-/** Query params kept on URL-bearing properties (standard UTM attribution + our app view state); all
- *  others are dropped. Deliberately narrow — `ref`/ad-click ids can carry personal data. */
-const QUERY_ALLOWLIST = /^(utm_|tab$|phase$)/i;
-/** URL-bearing PostHog keys to sanitize WHEREVER they appear — top-level and nested (e.g. the per-metric
- *  `$current_url` inside a `$web_vitals` event, or `$set_once` initial URLs if person-processing is ever
- *  enabled). Sanitization recurses, so a new nested URL property is covered without listing its path. */
+/** URL-bearing PostHog keys, sanitized WHEREVER they appear — top-level and nested (e.g. the per-metric
+ *  `$current_url` inside a `$web_vitals` event, or `$set_once` initial URLs). Recursive, so a new nested
+ *  URL property is covered without listing its path. */
 const URL_KEYS = new Set([
   "$current_url",
   "$referrer",
@@ -75,36 +72,42 @@ const URL_KEYS = new Set([
   "$initial_pathname",
 ]);
 
+/** Emails are redacted from retained campaign values: PostHog extracts `$utm_*`/click-ids as their own
+ *  properties from the query string, so a crafted `?utm_campaign=alice@example.com` would otherwise leak
+ *  even after the URL itself is stripped. */
+const EMAIL_RE = /[^\s/?#@]+@[^\s/?#@]+\.[^\s/?#@]+/g;
+/** Query-derived campaign property keys (with or without the `$`/`initial_` prefixes PostHog uses). */
+const CAMPAIGN_KEY =
+  /^\$?(initial_)?(utm_|gclid|gclsrc|gad_source|dclid|[wg]braid|fbclid|msclkid|twclid|li_fat_id|igshid|ttclid|rdt_cid|epik|irclid)/i;
+
 /**
- * Strip the fragment and any non-allowlisted query params from a URL/path string, so a link such as
- * `/?email=alice@example.com#token` can never leave the browser. Leaves plain values / posthog sentinels
- * (e.g. `$direct`) untouched. Exported for testing.
+ * Reduce a URL/path to **origin + pathname** — the entire query string AND fragment are dropped, so no
+ * user-controlled URL data (`?email=…`, `#token`, or a crafted campaign value) can ride along. Page-level
+ * analytics only needs the path. Leaves plain values / posthog sentinels (e.g. `$direct`) untouched.
+ * Exported for testing.
  */
 export function sanitizeUrl(value: unknown): unknown {
   if (typeof value !== "string" || !/[?#]/.test(value)) return value;
   try {
     const u = new URL(value, "http://_"); // base lets relative paths parse
-    u.hash = "";
-    for (const key of [...u.searchParams.keys()]) {
-      if (!QUERY_ALLOWLIST.test(key)) u.searchParams.delete(key);
-    }
-    return u.host === "_" ? `${u.pathname}${u.search}` : `${u.origin}${u.pathname}${u.search}`;
+    return u.host === "_" ? u.pathname : `${u.origin}${u.pathname}`;
   } catch {
-    return value.split("#")[0];
+    return value.replace(/[?#].*$/, ""); // URLs are single-line; no dotAll needed
   }
 }
 
 /**
- * Recursively strip query/fragment PII from every URL-bearing property (see `URL_KEYS`) and every
- * heatmap URL key, at any nesting depth — posthog-js also embeds `$current_url` inside nested objects
- * like `$web_vitals_LCP_event`, which a top-level-only pass would miss. Mutates in place; depth-bounded
- * so a malformed payload can't cause runaway recursion.
+ * Recursively sanitize a properties object at any nesting depth (posthog-js embeds `$current_url` inside
+ * nested objects like `$web_vitals_LCP_event` that a top-level pass would miss). For each key:
+ * URL-bearing props (`URL_KEYS`) and heatmap URL keys are reduced to origin+path; campaign props
+ * (`CAMPAIGN_KEY`, e.g. `$utm_campaign`) have any email redacted. Mutates in place; depth-bounded.
  */
 function sanitizeProps(obj: Record<string, unknown>, depth = 0): void {
   if (depth > 4) return;
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === "string") {
       if (URL_KEYS.has(key)) obj[key] = sanitizeUrl(value) as string;
+      else if (CAMPAIGN_KEY.test(key)) obj[key] = value.replace(EMAIL_RE, "<redacted>");
     } else if (value && typeof value === "object") {
       if (key === "$heatmap_data") {
         const clean: Record<string, unknown> = {};
@@ -122,10 +125,10 @@ function sanitizeProps(obj: Record<string, unknown>, depth = 0): void {
 /**
  * Client-side payload gate — runs for EVERY event. (1) Drops unactionable network-failure exceptions and
  * translation-induced React hydration errors, so Error Tracking only sees real, stack-bearing errors.
- * (2) Sanitizes URL-bearing properties + heatmap keys so query/fragment PII (`?email=…`, `#token`) can
- * never leak — this is what actually backs the no-PII guarantee (posthog-js otherwise sends the full
- * `location.href` as `$current_url`, the referrer, and the heatmap URL key verbatim). `isTranslated` is
- * injected for testability.
+ * (2) Reduces URL-bearing properties + heatmap keys to origin+path (dropping the whole query + fragment)
+ * and redacts emails from campaign properties — this is what actually backs the no-PII guarantee
+ * (posthog-js otherwise sends the full `location.href`, referrer, heatmap URL key, and `$utm_*` verbatim).
+ * `isTranslated` is injected for testability.
  */
 export function beforeSend(
   payload: { event: string; properties?: Record<string, unknown> } | null,

@@ -10,9 +10,10 @@
  * contains an escaped quote/backslash. A property key is only counted in real object-key position
  * (preceded by `{` or `,`, followed by `:`), so ternary/label colons don't false-positive.
  *
- * Known static-analysis limits (documented, not bugs): dynamic event names (a variable or template
- * literal) and computed keys (`["x"]:`) can't be validated; `$`-prefixed names are always allowed.
- * Ported from the NoaIQ marketing site. Run: `pnpm event-lint`.
+ * Handles multi-line calls, comments between `track` and `(`, quoted/shorthand/computed property keys,
+ * and executable MDX under content/. Remaining static-analysis limit (documented, not a bug): a dynamic
+ * event NAME (a variable or template literal) can't be validated, and `$`-prefixed names are allowed.
+ * Regression fixtures live in scripts/event-lint.test.mjs. Ported from the NoaIQ marketing site.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
@@ -95,6 +96,28 @@ function tokenize(src) {
 
 const isPunct = (tok, ch) => tok?.type === "punct" && tok.text === ch;
 
+/** If token `j` is a property key — `key:` / `"key":` (bare or quoted), `{ key }` (shorthand), or
+ *  `["key"]:` (computed) in real object-key position — return its name; else null. The position checks
+ *  keep ternary/label colons, array elements, and property access from being read as keys. */
+function keyAt(toks, j) {
+  const a = toks[j];
+  if (!a || (a.type !== "ident" && a.type !== "string")) return null;
+  const prev = toks[j - 1];
+  const next = toks[j + 1];
+  const inObjPos = isPunct(prev, "{") || isPunct(prev, ",");
+  if (isPunct(next, ":") && inObjPos) return a.text; // { key: … }  /  , "key": …
+  if (a.type === "ident" && inObjPos && (isPunct(next, ",") || isPunct(next, "}"))) return a.text; // { key }
+  if (
+    a.type === "string" &&
+    isPunct(prev, "[") &&
+    (isPunct(toks[j - 2], "{") || isPunct(toks[j - 2], ",")) &&
+    isPunct(next, "]") &&
+    isPunct(toks[j + 2], ":")
+  )
+    return a.text; // { ["key"]: … }
+  return null;
+}
+
 /** Pure: lint one file's text → problem strings. The analytics port itself is exempt. */
 export function lintText(rel, text, allowed) {
   if (rel.startsWith("lib/analytics/")) return [];
@@ -123,13 +146,10 @@ export function lintText(rel, text, allowed) {
       if (isPunct(a, "(")) depth++;
       else if (isPunct(a, ")")) {
         if (--depth === 0) break;
-      } else if (
-        (a.type === "ident" || a.type === "string") &&
-        isPunct(toks[j + 1], ":") &&
-        (isPunct(toks[j - 1], "{") || isPunct(toks[j - 1], ","))
-      ) {
-        if (isPiiKey(a.text)) {
-          problems.push(`${rel}:${lineAt(text, a.index)}  PII-looking property key "${a.text}"`);
+      } else {
+        const key = keyAt(toks, j);
+        if (key !== null && isPiiKey(key)) {
+          problems.push(`${rel}:${lineAt(text, a.index)}  PII-looking property key "${key}"`);
         }
       }
     }
@@ -144,8 +164,10 @@ function walk(dir) {
     if (entry === "node_modules" || entry.startsWith(".")) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) out.push(...walk(full));
-    // Cover every source extension the repo can execute (tsconfig allowJs + next pageExtensions).
-    else if (/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/.test(full) && !/\.test\./.test(full)) out.push(full);
+    // Cover every source the repo can execute: tsconfig allowJs + next pageExtensions, plus the
+    // MDX/markdown under content/ that Next compiles (a track()/PII in an MDX file must be governed).
+    else if (/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|md|mdx)$/.test(full) && !/\.test\./.test(full))
+      out.push(full);
   }
   return out;
 }
@@ -154,7 +176,7 @@ export function run(root = process.cwd()) {
   const allowed = parseAllowed(readFileSync(join(root, "lib/analytics/events.ts"), "utf8"));
   if (allowed.size === 0) throw new Error("event-lint — could not parse EVENTS enum.");
   const problems = [];
-  for (const base of ["app", "components", "lib"]) {
+  for (const base of ["app", "components", "lib", "content"]) {
     for (const file of walk(join(root, base))) {
       const rel = relative(root, file).split(sep).join("/");
       problems.push(...lintText(rel, readFileSync(file, "utf8"), allowed));

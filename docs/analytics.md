@@ -19,11 +19,12 @@ This keeps the funnel measurable without the consent-gate friction that tanks co
 The trade-off: no cross-visit retention, no lead-level attribution, no session replay. Those need an
 identified/consented tier, which is deliberately **not** wired here.
 
-**URL/PII safety.** PostHog sends the full `location.href` as `$current_url` (plus referrer, the
-heatmap URL key, and nested copies inside web-vitals events). A link like `/?email=alice@example.com#token`
-would otherwise leak PII, so `beforeSend` (in `client.ts`) **recursively** strips the fragment and drops
-every query param outside a narrow allowlist (`utm_*`, `tab`, `phase`) from all URL-bearing properties,
-at any nesting depth. `mask_personal_data_properties` (ad-click IDs) is on as defense in depth.
+**URL/PII safety.** PostHog sends the full `location.href` as `$current_url` (plus referrer, the heatmap
+URL key, nested copies inside web-vitals events, and `$utm_*` campaign properties). To keep the no-PII
+guarantee real, `beforeSend` (in `client.ts`) **recursively reduces every URL-bearing property to
+origin + path** — the entire query string and fragment are dropped, at any nesting depth — and **redacts
+emails from campaign properties**, so a crafted `?utm_campaign=alice@example.com` can't leak. Page-level
+analytics needs only the path. `mask_personal_data_properties` is on as defense in depth.
 
 ## What gets captured
 
@@ -235,9 +236,9 @@ uploads (and deletes) maps on each build.
 Roughly a third of visitors block `eu.i.posthog.com` directly. The `/ingest` rewrite in
 `next.config.ts` proxies ingestion through the app's own origin. It's **wired but dormant** — flip it
 on by setting `NEXT_PUBLIC_POSTHOG_HOST=/ingest` (locally and in Vercel). It's a same-origin path, so
-**no DNS or subdomain is required**. When you enable it, also add `skipTrailingSlashRedirect: true` to
-`next.config.ts` (PostHog's POSTs must keep their trailing slashes) — it's left off by default because,
-as a global flag, it would disable trailing-slash canonicalization for the whole site. The source-map
+**no DNS or subdomain is required**, and it works with Next's default trailing-slash handling — the
+308 redirect preserves the POST body, so **do not** set the global `skipTrailingSlashRedirect` (it would
+disable canonical redirects site-wide and create duplicate `/about` + `/about/` URLs). The source-map
 uploader automatically falls back to the real PostHog host when the value is a path.
 
 ## Querying analytics from Claude Code

@@ -11,10 +11,9 @@ const nextConfig: NextConfig = {
   // when NEXT_PUBLIC_POSTHOG_HOST=/ingest. Phase 1 connects directly to eu.i.posthog.com, so these
   // rules sit unused until we flip the env var on — no DNS or subdomain required (same-origin path).
   //
-  // NOTE: when enabling the proxy, also add `skipTrailingSlashRedirect: true` — PostHog's POSTs must
-  // keep their trailing slashes. It is intentionally NOT set here: as a global flag it disables
-  // trailing-slash canonicalization for the whole site (e.g. /about and /about/ both 200), creating
-  // duplicate URLs / analytics identities, which isn't worth it while the proxy is off.
+  // NOTE: do NOT add a global `skipTrailingSlashRedirect` for this — Next's default 308 redirect
+  // preserves the POST body, so /ingest works with normal handling. The global flag would disable
+  // trailing-slash canonicalization site-wide (e.g. /about and /about/ both 200), duplicating URLs.
   async rewrites() {
     return [
       {

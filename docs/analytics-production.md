@@ -27,7 +27,8 @@ redeploy. Never give `POSTHOG_API_KEY` a `NEXT_PUBLIC_` prefix.
 Vercel builds on every push — no extra CI to configure.
 
 - **Build command:** default `next build`. Every PR gets a Preview deploy; `main` promotes to Production.
-- **Node:** `package.json` declares `engines.node >=20.9.0`; Vercel picks a compatible version.
+- **Node:** `package.json` declares `engines.node ^20.20.0 || >=22.22.0` (the floor required by
+  `@posthog/nextjs-config`); Vercel picks a compatible version.
 - **Gate before merge:** `pnpm check` (lint + typecheck + `event-lint` + duplicate-check + build).
 
 ## 3. Error tracking + source maps
@@ -46,8 +47,9 @@ add it + `POSTHOG_PROJECT_ID` to Vercel, redeploy. Nothing else.
 ~1/3 of visitors block `eu.i.posthog.com`. Two ways to proxy through your own origin — pick one:
 
 **A. Path proxy — no DNS, available now.** The `/ingest` rewrite is already in `next.config.ts`. Set
-`NEXT_PUBLIC_POSTHOG_HOST=/ingest` in Vercel, and add `skipTrailingSlashRedirect: true` to
-`next.config.ts` (PostHog POSTs must keep trailing slashes). Same-origin, zero DNS. Simplest.
+`NEXT_PUBLIC_POSTHOG_HOST=/ingest` in Vercel and redeploy. Same-origin, zero DNS, simplest. Works with
+Next's default trailing-slash handling (the 308 redirect preserves POST bodies) — do **not** set the
+global `skipTrailingSlashRedirect`, which would create duplicate `/about` + `/about/` URLs.
 
 **B. Subdomain — needs DNS (admin).** Use a first-party subdomain like `ph.hackathon-guidebook.com`:
 1. In PostHog, create a **managed reverse proxy** → it gives you a CNAME target.
@@ -67,5 +69,5 @@ now; move to **B** when DNS access is available.
 - [ ] `NEXT_PUBLIC_POSTHOG_KEY` set in Vercel (Production + Preview) → analytics live
 - [ ] Web Analytics / Heatmaps / Error tracking on; replay off; domains authorized
 - [ ] `POSTHOG_API_KEY` (Error-tracking write) + `POSTHOG_PROJECT_ID` set → readable error traces
-- [ ] Optional: `NEXT_PUBLIC_POSTHOG_HOST=/ingest` (+ add `skipTrailingSlashRedirect`) for ad-blocker resistance
+- [ ] Optional: `NEXT_PUBLIC_POSTHOG_HOST=/ingest` for ad-blocker resistance (no other config needed)
 - [ ] Redeploy; confirm a `$pageview` and a test error land in project `220518`
