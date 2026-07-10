@@ -10,9 +10,11 @@
  * contains an escaped quote/backslash. A property key is only counted in real object-key position
  * (preceded by `{` or `,`, followed by `:`), so ternary/label colons don't false-positive.
  *
- * Handles multi-line calls, comments between `track` and `(`, quoted/shorthand/computed property keys,
- * and executable MDX under content/. Remaining static-analysis limit (documented, not a bug): a dynamic
- * event NAME (a variable or template literal) can't be validated, and `$`-prefixed names are allowed.
+ * Handles multi-line calls, comments between `track` and `(`, regex/division, quoted/shorthand/computed
+ * property keys, and executable MDX under content/. Accepted static-analysis limits (documented, not
+ * bugs — an AST rule would close them, but the repo calls the bare `track(...)` helper, so none occur):
+ * a dynamic event NAME (variable/template) isn't validated, `$`-prefixed names are allowed, and
+ * generic/optional call forms (`track<T>(…)`, `track?.(…)`) aren't matched.
  * Regression fixtures live in scripts/event-lint.test.mjs. Ported from the NoaIQ marketing site.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
