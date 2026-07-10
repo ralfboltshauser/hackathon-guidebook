@@ -24,6 +24,11 @@ const CASES = [
   ["property access, not a key", 'track("tab_switched", { v: obj.email });', 0],
   ["hashed email allowed", 'track("theme_toggled", { email_sha256: h });', 0],
   ["known event, safe props", 'track("checklist_item_toggled", { phase: 2, checked: true });', 0],
+  ["regex with quotes does not ungate the file", 'const re = /["\']/g;\ntrack("tab_switched", { tab: "x" });', 0],
+  ["division is not a regex", 'const r = a / b / c;\ntrack("tab_switched", { tab: "x" });', 0],
+  ["unrelated .capture() method", 'chart.capture("screenshot_png");', 0],
+  ["unrelated .track() method", 'audio.track("stereo_left");', 0],
+  ["TS type annotation in args", 'track("tab_switched", data as { email: string });', 0],
 
   // — MUST flag (bypass guards) —
   ["unknown event name", 'track("totally_unknown_event", { tab: "x" });', 1],
@@ -35,6 +40,8 @@ const CASES = [
   ["object shorthand PII key", 'track("tab_switched", { email });', 1],
   ["computed PII key", 'track("tab_switched", { ["email"]: v });', 1],
   ["multiline unknown + two PII keys", 'track(\n "made_up",\n { "email": a, phone_number: b }\n);', 3],
+  ["PII key still caught after a regex literal", 'const re = /["\']/g;\ntrack("tab_switched", { phone_number: v });', 1],
+  ["PII key after a regex inside args", 'track("tab_switched", { a: /\\)/.test(s), email: v });', 1],
 ];
 
 let failed = 0;

@@ -39,7 +39,7 @@ Run the full local gate before pushing:
 pnpm check
 ```
 
-`pnpm check` runs linting, typecheck, the analytics taxonomy gate, duplicate-code
+`pnpm check` runs linting, typecheck, the analytics taxonomy gate (with self-test), duplicate-code
 detection, and a production build.
 
 ## Analytics

@@ -15,7 +15,7 @@ Before opening a pull request, run:
 pnpm check
 ```
 
-`pnpm check` runs ESLint, duplicate-code detection, and a production build.
+`pnpm check` runs ESLint, TypeScript typecheck, the analytics taxonomy gate (event-lint + its self-test), duplicate-code detection, and a production build.
 
 ## Project structure
 

@@ -19,12 +19,20 @@ This keeps the funnel measurable without the consent-gate friction that tanks co
 The trade-off: no cross-visit retention, no lead-level attribution, no session replay. Those need an
 identified/consented tier, which is deliberately **not** wired here.
 
-**URL/PII safety.** PostHog sends the full `location.href` as `$current_url` (plus referrer, the heatmap
-URL key, nested copies inside web-vitals events, and `$utm_*` campaign properties). To keep the no-PII
-guarantee real, `beforeSend` (in `client.ts`) **recursively reduces every URL-bearing property to
-origin + path** — the entire query string and fragment are dropped, at any nesting depth — and **redacts
-emails from campaign properties**, so a crafted `?utm_campaign=alice@example.com` can't leak. Page-level
-analytics needs only the path. `mask_personal_data_properties` is on as defense in depth.
+**URL/PII controls.** PostHog otherwise sends the full `location.href` as `$current_url` (plus referrer,
+the heatmap URL key, nested copies inside web-vitals events, `$set_once` initial URLs, and `$utm_*`
+campaign properties). `beforeSend` (in `client.ts`) locks this down:
+
+- **URL-bearing properties → origin + path.** The whole query string and fragment are dropped, recursively
+  (nested copies + the `$set`/`$set_once` siblings included). Page-level analytics needs only the path.
+- **Campaign params.** Standard **source / medium / campaign** are kept for attribution (emails redacted);
+  free-form and click-id params (`utm_term`/`utm_content`, `gclid`, `fbclid`, `mc_cid`, the referrer
+  search keyword, …) are **dropped**.
+- **Fail-closed.** If sanitizing ever throws, the event is dropped rather than sent unsanitized.
+
+So no URL query/fragment PII leaves the browser. This is not an absolute guarantee — an operator who
+deliberately puts, say, a phone number in `utm_campaign` would still see that value — so don't put PII in
+campaign params. `mask_personal_data_properties` (ad-click IDs) is defense in depth.
 
 ## What gets captured
 
@@ -209,37 +217,17 @@ order by phase
 last 7 days in project 220518"* or *"top 5 errors this week"*. The `pulse` skill documents more query
 patterns and guards the cookieless invariants.
 
-## Setup and configuration
+## Setup
 
-### Environment variables
+Locally: copy `.env.example` → `.env.local` and paste your `NEXT_PUBLIC_POSTHOG_KEY` (empty = analytics
+off). That's all you need for pageviews/heatmaps/errors/events in dev.
 
-| Variable | Scope | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_POSTHOG_KEY` | browser | Project (ingestion) key `phc_…`. **Empty disables analytics.** Write-only, browser-safe. |
-| `NEXT_PUBLIC_POSTHOG_HOST` | browser | `https://eu.i.posthog.com` (direct) or `/ingest` (proxy). |
-| `POSTHOG_API_KEY` | build only | Personal key (Error-tracking **write**) for source-map upload. **Secret** — never `NEXT_PUBLIC_`. |
-| `POSTHOG_PROJECT_ID` | build only | `220518`. Used by the source-map uploader. |
+**Error tracking** works from that key alone; production stack traces stay minified until source maps are
+uploaded (set `POSTHOG_API_KEY` + `POSTHOG_PROJECT_ID` in the Vercel build env — `next.config.ts` uploads
+then deletes them). The `/ingest` reverse proxy (ad-blocker resistance) is wired but dormant.
 
-Locally, copy `.env.example` → `.env.local` and paste the key. In production, set the same vars in
-**Vercel → Settings → Environment Variables** (Production + Preview).
-
-### Error tracking + readable stack traces
-
-`capture_exceptions` auto-captures uncaught errors and unhandled rejections. Because React swallows
-render errors in production, `app/error.tsx` (route segments) and `app/global-error.tsx` (root layout)
-call `captureException()` to close that gap. Production stack traces are minified until source maps are
-uploaded — set `POSTHOG_API_KEY` + `POSTHOG_PROJECT_ID` in the Vercel build env and `next.config.ts`
-uploads (and deletes) maps on each build.
-
-### Ad-blocker-resistant proxy (optional, no DNS)
-
-Roughly a third of visitors block `eu.i.posthog.com` directly. The `/ingest` rewrite in
-`next.config.ts` proxies ingestion through the app's own origin. It's **wired but dormant** — flip it
-on by setting `NEXT_PUBLIC_POSTHOG_HOST=/ingest` (locally and in Vercel). It's a same-origin path, so
-**no DNS or subdomain is required**, and it works with Next's default trailing-slash handling — the
-308 redirect preserves the POST body, so **do not** set the global `skipTrailingSlashRedirect` (it would
-disable canonical redirects site-wide and create duplicate `/about` + `/about/` URLs). The source-map
-uploader automatically falls back to the real PostHog host when the value is a path.
+Full production setup — env vars, CI/CD, source maps, proxy/subdomain, dashboard — is in
+[`analytics-production.md`](./analytics-production.md).
 
 ## Querying analytics from Claude Code
 

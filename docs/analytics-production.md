@@ -29,7 +29,7 @@ Vercel builds on every push — no extra CI to configure.
 - **Build command:** default `next build`. Every PR gets a Preview deploy; `main` promotes to Production.
 - **Node:** `package.json` declares `engines.node ^20.20.0 || >=22.22.0` (the floor required by
   `@posthog/nextjs-config`); Vercel picks a compatible version.
-- **Gate before merge:** `pnpm check` (lint + typecheck + `event-lint` + duplicate-check + build).
+- **Gate before merge:** `pnpm check` (lint + typecheck + event-lint + its self-test + duplicate-check + build).
 
 ## 3. Error tracking + source maps
 

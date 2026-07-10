@@ -62,7 +62,7 @@ confident; only escalate if still unclear after research. Never dismiss a securi
 ### 3. Apply minimal fixes
 
 - Smallest change that resolves the comment; don't refactor beyond it.
-- After fixing, run the repo's gate: `pnpm check` (lint + typecheck + event-lint + build) — or the
+- After fixing, run the repo's gate: `pnpm check` (lint + typecheck + event-lint + duplicate-check + build) — or the
   narrowest relevant subset. Never resolve a thread whose fix breaks the gate.
 
 ### 4. Reply + resolve each thread

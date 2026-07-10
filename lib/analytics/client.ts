@@ -72,13 +72,15 @@ const URL_KEYS = new Set([
   "$initial_pathname",
 ]);
 
-/** Emails are redacted from retained campaign values: PostHog extracts `$utm_*`/click-ids as their own
- *  properties from the query string, so a crafted `?utm_campaign=alice@example.com` would otherwise leak
- *  even after the URL itself is stripped. */
+/** Emails redacted from the attribution values we keep. */
 const EMAIL_RE = /[^\s/?#@]+@[^\s/?#@]+\.[^\s/?#@]+/g;
-/** Query-derived campaign property keys (with or without the `$`/`initial_` prefixes PostHog uses). */
-const CAMPAIGN_KEY =
-  /^\$?(initial_)?(utm_|gclid|gclsrc|gad_source|dclid|[wg]braid|fbclid|msclkid|twclid|li_fat_id|igshid|ttclid|rdt_cid|epik|irclid)/i;
+/** Attribution props kept for reporting (with an email redaction pass): the standard, low-cardinality
+ *  source/medium/campaign that marketing sets deliberately. PostHog extracts these from the query. */
+const CAMPAIGN_REDACT = /^\$?(initial_)?utm_(source|medium|campaign|id)$/i;
+/** Query-derived props DROPPED entirely — user-controllable, higher PII risk, little analytics value:
+ *  free-form utm_term/content, ad-click ids, mailchimp ids, and the referrer search keyword. */
+const CAMPAIGN_DROP =
+  /^(ph_keyword|\$?(initial_)?(utm_term|utm_content|gclid|gclsrc|gad_source|dclid|[wg]braid|fbclid|msclkid|twclid|li_fat_id|igshid|ttclid|rdt_cid|epik|irclid|mc_cid|mc_eid))$/i;
 
 /**
  * Reduce a URL/path to **origin + pathname** — the entire query string AND fragment are dropped, so no
@@ -98,21 +100,27 @@ export function sanitizeUrl(value: unknown): unknown {
 
 /**
  * Recursively sanitize a properties object at any nesting depth (posthog-js embeds `$current_url` inside
- * nested objects like `$web_vitals_LCP_event` that a top-level pass would miss). For each key:
- * URL-bearing props (`URL_KEYS`) and heatmap URL keys are reduced to origin+path; campaign props
- * (`CAMPAIGN_KEY`, e.g. `$utm_campaign`) have any email redacted. Mutates in place; depth-bounded.
+ * nested objects like `$web_vitals_LCP_event` that a top-level pass would miss). Per key: high-risk
+ * query-derived props (`CAMPAIGN_DROP`) are deleted; URL-bearing props (`URL_KEYS`) and heatmap URL keys
+ * are reduced to origin+path; kept attribution props (`CAMPAIGN_REDACT`) have emails redacted. Mutates
+ * in place; depth-bounded. Object.entries snapshots, so deleting/rewriting keys mid-loop is safe.
  */
 function sanitizeProps(obj: Record<string, unknown>, depth = 0): void {
   if (depth > 4) return;
   for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === "string") {
+    if (CAMPAIGN_DROP.test(key)) {
+      delete obj[key];
+    } else if (typeof value === "string") {
       if (URL_KEYS.has(key)) obj[key] = sanitizeUrl(value) as string;
-      else if (CAMPAIGN_KEY.test(key)) obj[key] = value.replace(EMAIL_RE, "<redacted>");
+      else if (CAMPAIGN_REDACT.test(key)) obj[key] = value.replace(EMAIL_RE, "<redacted>");
     } else if (value && typeof value === "object") {
       if (key === "$heatmap_data") {
         const clean: Record<string, unknown> = {};
         for (const [url, data] of Object.entries(value as Record<string, unknown>)) {
-          clean[String(sanitizeUrl(url))] = data;
+          const k = String(sanitizeUrl(url));
+          // Two URLs differing only by query collapse to one path key — merge, don't overwrite.
+          clean[k] =
+            Array.isArray(clean[k]) && Array.isArray(data) ? [...clean[k], ...data] : data;
         }
         obj[key] = clean;
       } else {
@@ -125,13 +133,21 @@ function sanitizeProps(obj: Record<string, unknown>, depth = 0): void {
 /**
  * Client-side payload gate — runs for EVERY event. (1) Drops unactionable network-failure exceptions and
  * translation-induced React hydration errors, so Error Tracking only sees real, stack-bearing errors.
- * (2) Reduces URL-bearing properties + heatmap keys to origin+path (dropping the whole query + fragment)
- * and redacts emails from campaign properties — this is what actually backs the no-PII guarantee
- * (posthog-js otherwise sends the full `location.href`, referrer, heatmap URL key, and `$utm_*` verbatim).
- * `isTranslated` is injected for testability.
+ * (2) Reduces URL-bearing properties + heatmap keys to origin+path (dropping the whole query + fragment),
+ * drops high-risk query-derived props, and redacts emails from the kept attribution props — across
+ * `properties` AND the `$set`/`$set_once` siblings (posthog attaches initial URLs there). If sanitizing
+ * ever throws, the event is dropped (fail closed) rather than sent unsanitized. `isTranslated` is
+ * injected for testability.
  */
 export function beforeSend(
-  payload: { event: string; properties?: Record<string, unknown> } | null,
+  payload:
+    | {
+        event: string;
+        properties?: Record<string, unknown>;
+        $set?: Record<string, unknown>;
+        $set_once?: Record<string, unknown>;
+      }
+    | null,
   isTranslated: () => boolean = isPageLikelyTranslated,
 ) {
   if (!payload) return payload;
@@ -142,7 +158,13 @@ export function beforeSend(
     if (value && EXCEPTION_NETWORK_NOISE.test(value)) return null;
     if (value && REACT_HYDRATION_ERROR.test(value) && isTranslated()) return null;
   }
-  if (payload.properties) sanitizeProps(payload.properties);
+  try {
+    if (payload.properties) sanitizeProps(payload.properties);
+    if (payload.$set) sanitizeProps(payload.$set);
+    if (payload.$set_once) sanitizeProps(payload.$set_once);
+  } catch {
+    return null; // never ship an unsanitized payload
+  }
   return payload;
 }
 
@@ -170,8 +192,8 @@ function load(): Promise<PostHog | null> {
           disable_session_recording: true, // replay is consent-only — off by default
           // capture_heatmaps is a valid runtime option, sometimes missing from the d.ts
           capture_heatmaps: true as never, // coordinate-stream heatmap is cookieless-safe (no element/PII)
-          // Masks known ad-click IDs (gclid/fbclid/…) in URLs. `beforeSend` (→ sanitizeProps) does the
-          // real work: it recursively strips the fragment + every non-allowlisted query param.
+          // Masks known ad-click IDs in URLs (defense in depth). `beforeSend` (→ sanitizeProps) does the
+          // real work: it recursively reduces URL properties to origin+path and scrubs campaign props.
           mask_personal_data_properties: true as never,
           before_send: beforeSend as never,
         });

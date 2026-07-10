@@ -43,8 +43,15 @@ function lineAt(text, index) {
   return line;
 }
 
-/** Tokenize JS/TS into { type: 'string'|'ident'|'punct', text, quote?, index }. Comments are dropped;
- *  string escapes (`\"`, `\\`) are handled so a string can't run past its terminator. */
+/** Keywords after which a `/` begins a regex literal (not division). */
+const REGEX_PRECEDING_KEYWORDS = new Set([
+  "return", "typeof", "instanceof", "in", "of", "case", "do", "else", "void", "delete", "new", "yield",
+  "await", "throw",
+]);
+
+/** Tokenize JS/TS into { type: 'string'|'ident'|'punct'|'regex', text?, quote?, index }. Comments are
+ *  dropped; string escapes (`\"`, `\\`) and regex literals are handled so neither can run past its
+ *  terminator or unbalance parens. */
 function tokenize(src) {
   const toks = [];
   const n = src.length;
@@ -58,6 +65,42 @@ function tokenize(src) {
       i += 2;
       while (i < n && !(src[i] === "*" && src[i + 1] === "/")) i++;
       i += 2;
+    } else if (c === "/") {
+      // A lone `/` is a regex literal in expression position, else division. Getting this right matters:
+      // a regex containing a quote/paren (e.g. `s.replace(/["']/g, "")`) would otherwise open a phantom
+      // string / unbalance parens and silently disable the gate for the rest of the file (fail-open).
+      const prev = toks[toks.length - 1];
+      const isDivision =
+        prev &&
+        (prev.type === "string" ||
+          prev.type === "regex" ||
+          (prev.type === "ident" && !REGEX_PRECEDING_KEYWORDS.has(prev.text)) ||
+          (prev.type === "punct" && (prev.text === ")" || prev.text === "]")));
+      if (isDivision) {
+        toks.push({ type: "punct", text: "/", index: i });
+        i++;
+      } else {
+        const index = i;
+        i++;
+        let inClass = false;
+        while (i < n) {
+          const ch = src[i];
+          if (ch === "\\") {
+            i += 2;
+            continue;
+          }
+          if (ch === "\n") break; // unterminated — bail rather than run away
+          if (ch === "[") inClass = true;
+          else if (ch === "]") inClass = false;
+          else if (ch === "/" && !inClass) {
+            i++;
+            break;
+          }
+          i++;
+        }
+        while (i < n && /[a-z]/i.test(src[i])) i++; // flags
+        toks.push({ type: "regex", index });
+      }
     } else if (c === '"' || c === "'" || c === "`") {
       const index = i;
       const quote = c;
@@ -126,8 +169,13 @@ export function lintText(rel, text, allowed) {
 
   for (let t = 0; t < toks.length; t++) {
     const tok = toks[t];
+    // Our helper is a bare `track(...)`/`capture(...)`; exclude unrelated methods like `chart.capture(`
+    // or `audio.track(` (a leading `.`) so they don't false-fail as unknown events.
     const isCall =
-      tok.type === "ident" && (tok.text === "track" || tok.text === "capture") && isPunct(toks[t + 1], "(");
+      tok.type === "ident" &&
+      (tok.text === "track" || tok.text === "capture") &&
+      isPunct(toks[t + 1], "(") &&
+      !isPunct(toks[t - 1], ".");
     if (!isCall) continue;
 
     // Event name = first arg, only if it's a plain (non-template) string literal.
@@ -138,15 +186,21 @@ export function lintText(rel, text, allowed) {
       }
     }
 
-    // Walk the call's arg tokens (balanced parens) for PII property keys in real key position:
-    // a bare ident or quoted string, preceded by `{`/`,` and followed by `:`.
+    // Walk the call's arg tokens (balanced parens) for PII property keys. Skip keys inside a TS type
+    // annotation object (`data as { email: string }`) — a type member is a name, not runtime data.
     let depth = 0;
+    const typeBrace = [];
     for (let j = t + 1; j < toks.length; j++) {
       const a = toks[j];
       if (isPunct(a, "(")) depth++;
       else if (isPunct(a, ")")) {
         if (--depth === 0) break;
-      } else {
+      } else if (isPunct(a, "{")) {
+        const p = toks[j - 1];
+        typeBrace.push(p?.type === "ident" && (p.text === "as" || p.text === "satisfies"));
+      } else if (isPunct(a, "}")) {
+        typeBrace.pop();
+      } else if (!typeBrace.some(Boolean)) {
         const key = keyAt(toks, j);
         if (key !== null && isPiiKey(key)) {
           problems.push(`${rel}:${lineAt(text, a.index)}  PII-looking property key "${key}"`);
@@ -181,6 +235,17 @@ export function run(root = process.cwd()) {
       const rel = relative(root, file).split(sep).join("/");
       problems.push(...lintText(rel, readFileSync(file, "utf8"), allowed));
     }
+  }
+  // Root-level executable seams that live outside those dirs (instrumentation-client.ts is the canonical
+  // spot for client PostHog init, so a track()/PII there must be governed too).
+  for (const f of ["instrumentation-client.ts", "instrumentation.ts", "middleware.ts", "mdx-components.tsx"]) {
+    const full = join(root, f);
+    try {
+      statSync(full);
+    } catch {
+      continue; // absent — skip
+    }
+    problems.push(...lintText(f, readFileSync(full, "utf8"), allowed));
   }
   return { allowed, problems };
 }

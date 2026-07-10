@@ -31,4 +31,4 @@ Read the `SKILL.md` and follow it, whichever agent you are.
 
 # Quality gate
 
-Run before pushing: **`pnpm check`** = `lint` + `typecheck` + `event-lint` + duplicate-check + `build`.
+Run before pushing: **`pnpm check`** = `lint` + `typecheck` + `event-lint` (+ its self-test) + duplicate-check + `build`.

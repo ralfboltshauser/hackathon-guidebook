@@ -22,7 +22,6 @@
     "@next/mdx": "^16.2.9",
     "@posthog/nextjs-config": "^1.9.68",
     "@types/mdx": "^2.0.14",
-    "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.42.0",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
