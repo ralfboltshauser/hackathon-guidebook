@@ -248,6 +248,7 @@ duration, top errors, or a HogQL query — scoped to project 220518. See the ski
 
 ## Related
 
+- [`going-live.md`](./going-live.md) — production deploy + config checklist (env, CI/CD, proxy, source maps)
 - `.env.example` — required environment variables
 - `.claude/skills/pulse/SKILL.md` — analytics workflows for agents
 - `lib/analytics/` — the analytics port (implementation)
