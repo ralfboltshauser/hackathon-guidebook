@@ -108,7 +108,9 @@ function walk(dir) {
     if (entry === "node_modules" || entry.startsWith(".")) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) out.push(...walk(full));
-    else if (/\.(ts|tsx)$/.test(full) && !/\.test\./.test(full)) out.push(full);
+    // Cover every source extension the repo can execute (tsconfig allowJs + next pageExtensions),
+    // so a track() call in a .js/.jsx/.mjs/.mts file can't slip past the gate.
+    else if (/\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/.test(full) && !/\.test\./.test(full)) out.push(full);
   }
   return out;
 }

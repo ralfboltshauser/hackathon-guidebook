@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   // Reverse proxy for PostHog ingestion (PostHog EU). WIRED BUT DORMANT: the client only routes here
   // when NEXT_PUBLIC_POSTHOG_HOST=/ingest. Phase 1 connects directly to eu.i.posthog.com, so these
   // rules sit unused until we flip the env var on — no DNS or subdomain required (same-origin path).
+  //
+  // NOTE: when enabling the proxy, also add `skipTrailingSlashRedirect: true` — PostHog's POSTs must
+  // keep their trailing slashes. It is intentionally NOT set here: as a global flag it disables
+  // trailing-slash canonicalization for the whole site (e.g. /about and /about/ both 200), creating
+  // duplicate URLs / analytics identities, which isn't worth it while the proxy is off.
   async rewrites() {
     return [
       {
@@ -22,8 +27,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Trailing slashes on /ingest/* would break PostHog's API calls — leave them untouched.
-  skipTrailingSlashRedirect: true,
 };
 
 const withMDX = createMDX({

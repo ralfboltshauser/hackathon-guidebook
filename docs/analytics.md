@@ -19,6 +19,12 @@ This keeps the funnel measurable without the consent-gate friction that tanks co
 The trade-off: no cross-visit retention, no lead-level attribution, no session replay. Those need an
 identified/consented tier, which is deliberately **not** wired here.
 
+**URL/PII safety.** PostHog sends the full `location.href` as `$current_url` (plus referrer and the
+heatmap URL key). A link like `/?email=alice@example.com#token` would otherwise leak PII, so
+`beforeSend` (in `client.ts`) strips the fragment and drops every query param outside an allowlist
+(`utm_*`, `ref`, `tab`, `phase`) from all URL-bearing properties and heatmap keys, with
+`mask_personal_data_properties` on as defense in depth.
+
 ## What gets captured
 
 | Signal | Event | How it works |
@@ -229,8 +235,10 @@ uploads (and deletes) maps on each build.
 Roughly a third of visitors block `eu.i.posthog.com` directly. The `/ingest` rewrite in
 `next.config.ts` proxies ingestion through the app's own origin. It's **wired but dormant** — flip it
 on by setting `NEXT_PUBLIC_POSTHOG_HOST=/ingest` (locally and in Vercel). It's a same-origin path, so
-**no DNS or subdomain is required**. The source-map uploader automatically falls back to the real
-PostHog host when the value is a path.
+**no DNS or subdomain is required**. When you enable it, also add `skipTrailingSlashRedirect: true` to
+`next.config.ts` (PostHog's POSTs must keep their trailing slashes) — it's left off by default because,
+as a global flag, it would disable trailing-slash canonicalization for the whole site. The source-map
+uploader automatically falls back to the real PostHog host when the value is a path.
 
 ## Querying analytics from Claude Code
 

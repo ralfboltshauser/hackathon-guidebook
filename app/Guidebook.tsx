@@ -36,12 +36,19 @@ export function Guidebook() {
   const allDone = Object.values(done).filter(Boolean).length;
   const allChecks = totalChecks + customTodoCount(customTodos);
 
-  const setViewState = useCallback((nextMode: Mode, nextPhaseIdx: number) => {
-    const safePhaseIdx = clampPhase(nextPhaseIdx);
-    setMode(nextMode);
-    setPhaseIdx(safePhaseIdx);
-    writeViewStateToUrl(nextMode, safePhaseIdx);
-  }, []);
+  // Single place that changes tab (mode). Emits tab_switched only on a real transition, regardless of
+  // which control triggered it (tab bar, checklist-open, logo) — no same-tab false positives, no
+  // silent switches.
+  const setViewState = useCallback(
+    (nextMode: Mode, nextPhaseIdx: number) => {
+      const safePhaseIdx = clampPhase(nextPhaseIdx);
+      if (nextMode !== mode) void track("tab_switched", { tab: nextMode });
+      setMode(nextMode);
+      setPhaseIdx(safePhaseIdx);
+      writeViewStateToUrl(nextMode, safePhaseIdx);
+    },
+    [mode],
+  );
 
   const setPhase = useCallback(
     (nextPhaseIdx: number | ((current: number) => number)) => {
@@ -58,9 +65,8 @@ export function Guidebook() {
   );
 
   const selectMode = (nextMode: Mode) => {
-    void track("tab_switched", { tab: nextMode });
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    setViewState(nextMode, phaseIdx);
+    setViewState(nextMode, phaseIdx); // tab_switched is emitted centrally in setViewState
   };
 
   // Resolve the phase index for any checklist key: `phaseIdx:groupIdx:itemIdx` (static) encodes it in

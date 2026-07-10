@@ -40,30 +40,64 @@ const EXCEPTION_NETWORK_NOISE =
  */
 const REACT_HYDRATION_ERROR = /Minified React error #(?:418|423|425)\b/;
 
-/** Languages this site serves; anything else implies an in-browser machine translation. */
+/** Languages this site serves; anything else in the *page* lang implies an in-browser translation. */
 const SERVED_LANGUAGES = new Set(["en"]);
 
 /**
- * Heuristic: is the page being machine-translated in the browser right now? Chrome / the Google-Translate
- * widget marks `<html>` with `translated-ltr`/`translated-rtl`, and a browser UI language outside what we
- * serve makes the visitor a translate candidate. Both reads are SSR-safe (guarded).
+ * Heuristic: has an in-browser machine translator (Chrome / Google Translate) actually rewritten the
+ * DOM right now? Requires a POSITIVE marker — the `translated-ltr`/`translated-rtl` root class, the page
+ * `lang` flipped away from what we served, or the `<font>` wrappers translators inject around swapped
+ * text. Deliberately does NOT treat `navigator.language` as proof: a German/French visitor on an
+ * untranslated page must keep their genuine React hydration errors. SSR-safe.
  */
 export function isPageLikelyTranslated(): boolean {
-  if (typeof document !== "undefined") {
-    const root = document.documentElement?.classList;
-    if (root?.contains("translated-ltr") || root?.contains("translated-rtl")) return true;
+  if (typeof document === "undefined") return false;
+  const root = document.documentElement;
+  if (root.classList?.contains("translated-ltr") || root.classList?.contains("translated-rtl"))
+    return true;
+  const pageLang = (root.lang || "en").toLowerCase().split("-")[0];
+  if (pageLang && !SERVED_LANGUAGES.has(pageLang)) return true; // translator flipped <html lang>
+  return document.querySelector("font") !== null; // translators wrap swapped text in <font>
+}
+
+/** Query params kept on URL-bearing properties (attribution + app view state); all others dropped. */
+const QUERY_ALLOWLIST = /^(utm_|gclid$|fbclid$|ref$|tab$|phase$)/i;
+/** PostHog properties (and heatmap keys) that carry a URL and could otherwise leak query/fragment PII. */
+const URL_PROPS = [
+  "$current_url",
+  "$referrer",
+  "$pathname",
+  "$initial_current_url",
+  "$initial_referrer",
+  "$initial_pathname",
+];
+
+/**
+ * Strip the fragment and any non-allowlisted query params from a URL/path string, so a link such as
+ * `/?email=alice@example.com#token` can never leave the browser. Leaves plain values / posthog sentinels
+ * (e.g. `$direct`) untouched. Exported for testing.
+ */
+export function sanitizeUrl(value: unknown): unknown {
+  if (typeof value !== "string" || !/[?#]/.test(value)) return value;
+  try {
+    const u = new URL(value, "http://_"); // base lets relative paths parse
+    u.hash = "";
+    for (const key of [...u.searchParams.keys()]) {
+      if (!QUERY_ALLOWLIST.test(key)) u.searchParams.delete(key);
+    }
+    return u.host === "_" ? `${u.pathname}${u.search}` : `${u.origin}${u.pathname}${u.search}`;
+  } catch {
+    return value.split("#")[0];
   }
-  if (typeof navigator !== "undefined" && navigator.language) {
-    const base = navigator.language.toLowerCase().split("-")[0];
-    if (base && !SERVED_LANGUAGES.has(base)) return true;
-  }
-  return false;
 }
 
 /**
- * Client-side payload gate — runs for EVERY event. Drops unactionable network-failure exceptions and
- * translation-induced React hydration errors before they leave the browser, so Error Tracking only sees
- * real, stack-bearing errors. `isTranslated` is injected for testability.
+ * Client-side payload gate — runs for EVERY event. (1) Drops unactionable network-failure exceptions and
+ * translation-induced React hydration errors, so Error Tracking only sees real, stack-bearing errors.
+ * (2) Sanitizes URL-bearing properties + heatmap keys so query/fragment PII (`?email=…`, `#token`) can
+ * never leak — this is what actually backs the no-PII guarantee (posthog-js otherwise sends the full
+ * `location.href` as `$current_url`, the referrer, and the heatmap URL key verbatim). `isTranslated` is
+ * injected for testability.
  */
 export function beforeSend(
   payload: { event: string; properties?: Record<string, unknown> } | null,
@@ -77,6 +111,19 @@ export function beforeSend(
     if (value && EXCEPTION_NETWORK_NOISE.test(value)) return null;
     if (value && REACT_HYDRATION_ERROR.test(value) && isTranslated()) return null;
   }
+  const props = payload.properties;
+  if (props) {
+    for (const key of URL_PROPS) {
+      if (typeof props[key] === "string") props[key] = sanitizeUrl(props[key]);
+    }
+    // Heatmap coordinate data is keyed by the full page URL — sanitize those keys too.
+    const heatmap = props.$heatmap_data;
+    if (heatmap && typeof heatmap === "object") {
+      const clean: Record<string, unknown> = {};
+      for (const [url, data] of Object.entries(heatmap)) clean[String(sanitizeUrl(url))] = data;
+      props.$heatmap_data = clean;
+    }
+  }
   return payload;
 }
 
@@ -84,29 +131,40 @@ export function beforeSend(
 function load(): Promise<PostHog | null> {
   if (!KEY) return Promise.resolve(null);
   if (!phPromise) {
-    phPromise = import("posthog-js").then((mod) => {
-      const posthog = mod.default;
-      posthog.init(KEY, {
-        api_host: HOST,
-        ui_host: UI_HOST,
-        autocapture: false,
-        // Pageviews are captured explicitly per route change (App Router SPA nav) in PostHogPageView,
-        // so PostHog's own auto-capture stays off to avoid double counting.
-        capture_pageview: false,
-        capture_pageleave: true, // accurate bounce rate + session duration (cookieless-safe)
-        capture_performance: { web_vitals: true }, // LCP/CLS/INP/FCP per page open (no PII)
-        capture_exceptions: true, // error tracking: auto-capture unhandled errors + rejections
-        person_profiles: "identified_only",
-        persistence: "memory", // no cookie, no localStorage → no Art.5(3) storage trigger
-        // biome-ignore lint: cookieless_mode option lags the posthog-js types
-        cookieless_mode: "always" as never, // transient server-side daily-salt hash (no device id)
-        disable_session_recording: true, // replay is consent-only — off by default
-        // capture_heatmaps is a valid runtime option, sometimes missing from the d.ts
-        capture_heatmaps: true as never, // coordinate-stream heatmap is cookieless-safe (no element/PII)
-        before_send: beforeSend as never,
+    phPromise = import("posthog-js")
+      .then((mod) => {
+        const posthog = mod.default;
+        posthog.init(KEY, {
+          api_host: HOST,
+          ui_host: UI_HOST,
+          autocapture: false,
+          // Pageviews are captured explicitly per route change (App Router SPA nav) in PostHogPageView,
+          // so PostHog's own auto-capture stays off to avoid double counting.
+          capture_pageview: false,
+          capture_pageleave: true, // accurate bounce rate + session duration (cookieless-safe)
+          capture_performance: { web_vitals: true }, // LCP/CLS/INP/FCP per page open (no PII)
+          capture_exceptions: true, // error tracking: auto-capture unhandled errors + rejections
+          person_profiles: "identified_only",
+          persistence: "memory", // no cookie, no localStorage → no Art.5(3) storage trigger
+          // biome-ignore lint: cookieless_mode option lags the posthog-js types
+          cookieless_mode: "always" as never, // transient server-side daily-salt hash (no device id)
+          disable_session_recording: true, // replay is consent-only — off by default
+          // capture_heatmaps is a valid runtime option, sometimes missing from the d.ts
+          capture_heatmaps: true as never, // coordinate-stream heatmap is cookieless-safe (no element/PII)
+          // Mask common PII patterns in captured URLs/properties (defense in depth; beforeSend also
+          // strips query/fragment PII from URL props + heatmap keys).
+          mask_personal_data_properties: true as never,
+          before_send: beforeSend as never,
+        });
+        return posthog;
+      })
+      .catch((error) => {
+        // Fail closed: analytics must never break the app. Clear the cached promise so a later call can
+        // retry after a transient chunk-load/init failure, and resolve to null (callers use `p?.`).
+        phPromise = null;
+        if (process.env.NODE_ENV !== "production") console.warn("[analytics] init failed", error);
+        return null;
       });
-      return posthog;
-    });
   }
   return phPromise;
 }
