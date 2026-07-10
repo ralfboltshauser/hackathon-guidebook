@@ -65,7 +65,3 @@ export interface EventProps {
   target?: string;
   [key: string]: unknown;
 }
-
-export function isEventName(name: string): name is EventName {
-  return Object.hasOwn(EVENTS, name);
-}

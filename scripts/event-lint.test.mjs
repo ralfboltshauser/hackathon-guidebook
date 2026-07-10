@@ -26,6 +26,7 @@ const CASES = [
   ["known event, safe props", 'track("checklist_item_toggled", { phase: 2, checked: true });', 0],
   ["regex with quotes does not ungate the file", 'const re = /["\']/g;\ntrack("tab_switched", { tab: "x" });', 0],
   ["division is not a regex", 'const r = a / b / c;\ntrack("tab_switched", { tab: "x" });', 0],
+  ["numeric division is not a regex", 'const pct = 100 / total;\ntrack("tab_switched", { tab: "x" });', 0],
   ["unrelated .capture() method", 'chart.capture("screenshot_png");', 0],
   ["unrelated .track() method", 'audio.track("stereo_left");', 0],
   ["TS type annotation in args", 'track("tab_switched", data as { email: string });', 0],
@@ -42,6 +43,8 @@ const CASES = [
   ["multiline unknown + two PII keys", 'track(\n "made_up",\n { "email": a, phone_number: b }\n);', 3],
   ["PII key still caught after a regex literal", 'const re = /["\']/g;\ntrack("tab_switched", { phone_number: v });', 1],
   ["PII key after a regex inside args", 'track("tab_switched", { a: /\\)/.test(s), email: v });', 1],
+  ["PII key caught after numeric division in args", 'track("tab_switched", { pct: 100 / total, email: v });', 1],
+  ["numeric division with string then PII on next line", 'track("tab_switched", { n: 100 / f("a/b"), email: v });', 1],
 ];
 
 let failed = 0;

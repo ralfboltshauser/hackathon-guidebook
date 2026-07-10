@@ -74,6 +74,7 @@ function tokenize(src) {
         prev &&
         (prev.type === "string" ||
           prev.type === "regex" ||
+          prev.type === "number" ||
           (prev.type === "ident" && !REGEX_PRECEDING_KEYWORDS.has(prev.text)) ||
           (prev.type === "punct" && (prev.text === ")" || prev.text === "]")));
       if (isDivision) {
@@ -113,12 +114,19 @@ function tokenize(src) {
         } else if (src[i] === quote) {
           i++;
           break;
+        } else if (src[i] === "\n" && quote !== "`") {
+          break; // '/" strings can't span lines — bail so a stray quote can't run to EOF
         } else {
           text += src[i];
           i++;
         }
       }
       toks.push({ type: "string", text, quote, index });
+    } else if (/[0-9]/.test(c)) {
+      // Number literal — so a `/` after it (e.g. `100 / total`) lexes as division, not a regex.
+      const index = i;
+      while (i < n && /[0-9._a-zA-Z]/.test(src[i])) i++; // covers hex/exp/bigint/separators
+      toks.push({ type: "number", index });
     } else if (/[A-Za-z_$]/.test(c)) {
       const index = i;
       let text = "";

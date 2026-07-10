@@ -80,7 +80,7 @@ const CAMPAIGN_REDACT = /^\$?(initial_)?utm_(source|medium|campaign|id)$/i;
 /** Query-derived props DROPPED entirely — user-controllable, higher PII risk, little analytics value:
  *  free-form utm_term/content, ad-click ids, mailchimp ids, and the referrer search keyword. */
 const CAMPAIGN_DROP =
-  /^(ph_keyword|\$?(initial_)?(utm_term|utm_content|gclid|gclsrc|gad_source|dclid|[wg]braid|fbclid|msclkid|twclid|li_fat_id|igshid|ttclid|rdt_cid|epik|irclid|mc_cid|mc_eid))$/i;
+  /^(ph_keyword|\$?(initial_)?(utm_term|utm_content|gclid|gclsrc|gad_source|dclid|[wg]braid|fbclid|msclkid|twclid|li_fat_id|igshid|ttclid|rdt_cid|epik|irclid|qclid|sccid|_kx|mc_cid|mc_eid))$/i;
 
 /**
  * Reduce a URL/path to **origin + pathname** — the entire query string AND fragment are dropped, so no

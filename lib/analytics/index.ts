@@ -3,4 +3,4 @@
  * provider stays a one-file swap. COOKIELESS by default (no consent banner). See client.ts.
  */
 export { captureException, capturePageview, getFlag, initAnalytics, sanitizeUrl, track } from "./client";
-export { EVENTS, type EventName, type EventProps, isEventName } from "./events";
+export { EVENTS, type EventName, type EventProps } from "./events";
