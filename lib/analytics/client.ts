@@ -94,6 +94,7 @@ function load(): Promise<PostHog | null> {
         // so PostHog's own auto-capture stays off to avoid double counting.
         capture_pageview: false,
         capture_pageleave: true, // accurate bounce rate + session duration (cookieless-safe)
+        capture_performance: { web_vitals: true }, // LCP/CLS/INP/FCP per page open (no PII)
         capture_exceptions: true, // error tracking: auto-capture unhandled errors + rejections
         person_profiles: "identified_only",
         persistence: "memory", // no cookie, no localStorage → no Art.5(3) storage trigger
@@ -131,6 +132,21 @@ export async function track(event: EventName, props: EventProps = {}): Promise<v
   }
   const p = await load();
   p?.capture(event, props);
+}
+
+/**
+ * Report a caught exception to PostHog Error Tracking. React render errors are swallowed by error
+ * boundaries in production and never reach the SDK's global handler, so `app/error.tsx` and
+ * `app/global-error.tsx` call this to close that gap. `capture_exceptions` still auto-captures
+ * uncaught errors + unhandled rejections; this is the boundary path only. The same `beforeSend`
+ * noise filter applies. `context` must stay PII-free.
+ */
+export async function captureException(
+  error: unknown,
+  context: Record<string, unknown> = {},
+): Promise<void> {
+  const p = await load();
+  p?.captureException(error, context);
 }
 
 /** Feature-flag value (not personal data; works cookieless). */

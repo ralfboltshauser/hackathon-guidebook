@@ -32,6 +32,13 @@ const withMDX = createMDX({
 
 const config = withMDX(nextConfig);
 
+// The source-map uploader needs a REAL PostHog host. The browser SDK may set NEXT_PUBLIC_POSTHOG_HOST
+// to the relative proxy path (`/ingest`), which is not a valid upload target — fall back to PostHog EU
+// whenever the value is empty or a path.
+const rawHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+const posthogUploadHost =
+  rawHost && !rawHost.startsWith("/") ? rawHost : "https://eu.i.posthog.com";
+
 // Upload source maps to PostHog Error Tracking so production stack traces are readable. Runs ONLY when
 // POSTHOG_API_KEY is set (CI / Vercel build secret); skipped locally/dev so ordinary builds are
 // unaffected and never ship maps to users (deleteAfterUpload). Secrets live in the build env, never here.
@@ -39,7 +46,7 @@ export default process.env.POSTHOG_API_KEY
   ? withPostHogConfig(config, {
       personalApiKey: process.env.POSTHOG_API_KEY,
       projectId: process.env.POSTHOG_PROJECT_ID,
-      host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com",
+      host: posthogUploadHost,
       sourcemaps: {
         enabled: true,
         releaseName: "hackathon-guidebook",

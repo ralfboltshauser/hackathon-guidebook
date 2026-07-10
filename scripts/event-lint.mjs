@@ -5,14 +5,22 @@
  * site is cookieless-by-default; no raw email/phone/name/ip should ever reach an event.
  *
  * Ported from the NoaIQ marketing site. Run: `pnpm event-lint`.
+ *
+ * Scans the FULL file text (not line-by-line) so that `track(` / `capture(` calls whose name sits on
+ * the next line are still caught, and so quoted PII keys (`"email":`) are caught alongside bare ones.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { argv } from "node:process";
 import { pathToFileURL } from "node:url";
 
-export const PII =
-  /\b(email|phone|first_?name|last_?name|full_?name|ip_address|raw_email|password)\b/i;
+/** PII property-key words. Matched with an optional surrounding quote and a following colon. */
+const PII_WORDS =
+  "email|phone|first_?name|last_?name|full_?name|ip_address|raw_email|password";
+// e.g.  email:   "email":   'phone' :   — but NOT email_sha256 (word boundary before the quote/colon).
+const PII_KEY = new RegExp(`(["']?)(${PII_WORDS})\\1\\s*:`, "gi");
+// track("name" | capture('name' — allows whitespace/newlines between ( and the quote.
+const CALL = /\b(?:track|capture)\(\s*['"]([^'"]+)['"]/g;
 
 /** Parse the allowed event names from the EVENTS enum source. */
 export function parseAllowed(eventsSrc) {
@@ -20,19 +28,33 @@ export function parseAllowed(eventsSrc) {
   return new Set([...(block?.[1].matchAll(/^\s*(\w+):/gm) ?? [])].map((m) => m[1]));
 }
 
+/** 1-based line number for a character offset in `text`. */
+function lineAt(text, index) {
+  let line = 1;
+  for (let i = 0; i < index && i < text.length; i++) if (text[i] === "\n") line++;
+  return line;
+}
+
 /** Pure: lint one file's text → problem strings. The analytics port itself is exempt. */
 export function lintText(rel, text, allowed) {
   if (rel.startsWith("lib/analytics/")) return [];
   const problems = [];
-  text.split("\n").forEach((line, i) => {
-    const call = line.match(/\b(?:track|capture)\(\s*['"]([^'"]+)['"]/);
-    if (call && !call[1].startsWith("$") && !allowed.has(call[1]))
-      problems.push(`${rel}:${i + 1}  unknown event "${call[1]}"`);
-    const pii = line.match(PII);
-    if (pii && !/email_sha256/.test(line) && new RegExp(`${pii[0]}\\s*[:=]`).test(line)) {
-      problems.push(`${rel}:${i + 1}  PII-looking property key "${pii[0]}"`);
+
+  for (const m of text.matchAll(CALL)) {
+    const name = m[1];
+    if (!name.startsWith("$") && !allowed.has(name)) {
+      problems.push(`${rel}:${lineAt(text, m.index)}  unknown event "${name}"`);
     }
-  });
+  }
+
+  for (const m of text.matchAll(PII_KEY)) {
+    // `email_sha256` is the one allowed hashed form; the \b in the match already excludes it, but
+    // keep an explicit guard in case the surrounding token changes.
+    const around = text.slice(m.index, m.index + m[0].length + 8);
+    if (/sha256/i.test(around)) continue;
+    problems.push(`${rel}:${lineAt(text, m.index)}  PII-looking property key "${m[2]}"`);
+  }
+
   return problems;
 }
 

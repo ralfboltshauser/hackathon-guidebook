@@ -7,9 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "duplication": "jscpd --config jscpd.config.json",
     "event-lint": "node scripts/event-lint.mjs",
-    "check": "pnpm lint && pnpm event-lint && pnpm duplication && pnpm build"
+    "check": "pnpm lint && pnpm typecheck && pnpm event-lint && pnpm duplication && pnpm build"
+  },
+  "engines": {
+    "node": "^20.20.0 || >=22.22.0"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",

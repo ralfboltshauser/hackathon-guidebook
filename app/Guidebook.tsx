@@ -8,6 +8,7 @@ import { LearnView } from "@/components/guidebook/LearnView";
 import {
   clampPhase,
   customTodoCount,
+  phaseComplete,
   readInitialState,
   scrollToPhase,
   totalChecks,
@@ -63,13 +64,42 @@ export function Guidebook() {
   };
 
   const handleToggleCheck = (key: string) => {
-    // key is `phaseIdx:groupIdx:itemIdx` (static) or `custom:<id>`; phaseIdx is the leading segment.
-    const phase = Number.parseInt(key.split(":")[0], 10);
-    void track("checklist_item_toggled", {
-      phase: Number.isNaN(phase) ? undefined : phase,
-      checked: !done[key],
-    });
+    // key is `phaseIdx:groupIdx:itemIdx` (static) or `custom:<id>`; the leading segment is the phase
+    // for static items only (custom-todo keys don't encode a phase).
+    const isStatic = /^\d+:/.test(key);
+    const phase = isStatic ? Number.parseInt(key.split(":")[0], 10) : undefined;
+    const nowChecked = !done[key];
+
+    void track("checklist_item_toggled", { phase, checked: nowChecked });
+
+    // Fire the phase-completion milestone when THIS toggle finishes the phase (transition only).
+    if (isStatic && phase !== undefined && nowChecked) {
+      const nextDone = { ...done, [key]: true };
+      if (
+        !phaseComplete(phase, done, customTodos) &&
+        phaseComplete(phase, nextDone, customTodos)
+      ) {
+        void track("checklist_phase_completed", { phase });
+      }
+    }
+
     toggleCheck(key);
+  };
+
+  const handleAddCustomTodo = (groupKey: string, label: string) => {
+    const phase = Number.parseInt(groupKey.split(":")[0], 10);
+    void track("custom_todo_added", { phase: Number.isNaN(phase) ? undefined : phase });
+    addCustomTodo(groupKey, label);
+  };
+
+  const handleResetProgress = () => {
+    void track("checklist_reset", { scope: "progress" });
+    resetProgress();
+  };
+
+  const handleResetProgressAndCustomTodos = () => {
+    void track("checklist_reset", { scope: "progress_and_todos" });
+    resetProgressAndCustomTodos();
   };
 
   const openChecklist = (i: number) => {
@@ -135,10 +165,10 @@ export function Guidebook() {
           totalDone={allDone}
           totalChecks={allChecks}
           onToggle={handleToggleCheck}
-          onAddCustomTodo={addCustomTodo}
+          onAddCustomTodo={handleAddCustomTodo}
           onRemoveCustomTodo={removeCustomTodo}
-          onResetProgress={resetProgress}
-          onResetProgressAndCustomTodos={resetProgressAndCustomTodos}
+          onResetProgress={handleResetProgress}
+          onResetProgressAndCustomTodos={handleResetProgressAndCustomTodos}
           onRead={() => selectMode("learn")}
           onPrev={() => setPhase((i) => i - 1)}
           onNext={() => setPhase((i) => i + 1)}

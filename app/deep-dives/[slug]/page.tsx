@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { TrackView } from "@/app/TrackView";
 import { DeepDiveHeader } from "@/components/deep-dives/DeepDiveHeader";
 import { DraftBadge } from "@/components/deep-dives/DraftBadge";
 import { deepDives, getDeepDive, getDeepDiveOgImagePath } from "@/lib/deep-dives";
@@ -94,6 +95,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
 
   return (
     <main className="min-h-screen bg-page font-serif text-ink">
+      <TrackView event="deep_dive_view" props={{ slug: deepDive.slug }} />
       <DeepDiveHeader />
 
       <article>
