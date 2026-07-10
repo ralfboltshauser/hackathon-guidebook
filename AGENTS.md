@@ -18,13 +18,16 @@ heatmaps, error tracking, and typed product events. No cookie banner.
 
 # Skills & tooling (works with any agent)
 
-Agent-agnostic — read the file and follow it, regardless of which agent you are.
+Skills live canonically in **`.agents/skills/<name>/SKILL.md`** (open Agent Skills standard). Each
+agent's fixed skills path is a committed symlink to it — `.claude/skills`, `.cursor/skills`, and
+`.opencode/skills` all resolve to `.agents/skills` — so there is one source of truth and no drift.
+Read the `SKILL.md` and follow it, whichever agent you are.
 
-- **`.claude/skills/pulse/SKILL.md`** — fetch & analyze PostHog data; add new tracking.
-- **`.claude/skills/resolve-pr-comments/SKILL.md`** — triage & resolve PR review comments. Bundled
-  scripts (any agent): `pr-threads.sh` (list threads + IDs), `pr-resolve.sh` (reply + resolve).
-- **PostHog MCP** — query project `220518` directly. Configured for **Claude Code** (`.mcp.json`) and
-  **Codex** (`.codex/config.toml`); both point at `https://mcp.posthog.com/mcp` (log in on first use).
+- **`.agents/skills/pulse/`** — fetch & analyze PostHog data; add new tracking.
+- **`.agents/skills/resolve-pr-comments/`** — triage & resolve PR review comments. Bundled scripts
+  (plain bash, any agent): `pr-threads.sh` (list threads + IDs), `pr-resolve.sh` (reply + resolve).
+- **PostHog MCP** — query project `220518` directly. Claude Code (`.mcp.json`) and Codex
+  (`.codex/config.toml`) both point at `https://mcp.posthog.com/mcp` (log in on first use).
 
 # Quality gate
 

@@ -243,12 +243,12 @@ uploader automatically falls back to the real PostHog host when the value is a p
 ## Querying analytics from Claude Code
 
 The repo ships a project-scoped **PostHog MCP** (`.mcp.json`) and a **`pulse` skill**
-(`.claude/skills/pulse/`). Run `/mcp` and complete the browser login, then ask for pageviews, session
+(`.agents/skills/pulse/`). Run `/mcp` and complete the browser login, then ask for pageviews, session
 duration, top errors, or a HogQL query — scoped to project 220518. See the skill for query patterns.
 
 ## Related
 
-- [`going-live.md`](./going-live.md) — production deploy + config checklist (env, CI/CD, proxy, source maps)
+- [`analytics-production.md`](./analytics-production.md) — production configuration (env, CI/CD, proxy, source maps)
 - `.env.example` — required environment variables
-- `.claude/skills/pulse/SKILL.md` — analytics workflows for agents
+- `.agents/skills/pulse/SKILL.md` — analytics workflows for agents
 - `lib/analytics/` — the analytics port (implementation)

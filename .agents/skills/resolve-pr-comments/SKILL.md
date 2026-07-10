@@ -27,7 +27,7 @@ same name.
 
 ```bash
 # Unresolved review threads + the node IDs you'll need to resolve them:
-bash .claude/skills/resolve-pr-comments/scripts/pr-threads.sh <PR_NUMBER>
+bash .agents/skills/resolve-pr-comments/scripts/pr-threads.sh <PR_NUMBER>
 ```
 
 For the full bodies (and top-level + review-summary comments), also:
@@ -69,7 +69,7 @@ confident; only escalate if still unclear after research. Never dismiss a securi
 
 ```bash
 # THREAD_ID comes from pr-threads.sh (step 1). Reply states what changed / why dismissed.
-bash .claude/skills/resolve-pr-comments/scripts/pr-resolve.sh <THREAD_ID> \
+bash .agents/skills/resolve-pr-comments/scripts/pr-resolve.sh <THREAD_ID> \
   "Fixed in <short-sha>: <one line on the change>."
 ```
 
@@ -78,7 +78,7 @@ Reply with the commit SHA for fixes, or the evidence for a dismissal. Then push 
 ### 5. Verify
 
 ```bash
-bash .claude/skills/resolve-pr-comments/scripts/pr-threads.sh <PR_NUMBER>
+bash .agents/skills/resolve-pr-comments/scripts/pr-threads.sh <PR_NUMBER>
 ```
 
 Success = every actionable thread shows `resolved` (deferred ones stay OPEN, with an escalation note).

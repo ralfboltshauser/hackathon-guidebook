@@ -47,7 +47,7 @@ detection, and a production build.
 The site runs cookieless PostHog (no cookie banner): page opens, session duration,
 web vitals, heatmaps, error tracking, and typed product events. See
 [`docs/analytics.md`](./docs/analytics.md) for the setup, taxonomy, and how to add events, and
-[`docs/going-live.md`](./docs/going-live.md) for the production deploy checklist.
+[`docs/analytics-production.md`](./docs/analytics-production.md) for the production setup.
 
 ## Content architecture
 

@@ -1,7 +1,8 @@
-# Going live: analytics in production
+# Analytics: production configuration
 
-What it takes to run the cookieless PostHog setup in production on Vercel. For how the analytics
-themselves work, see [`analytics.md`](./analytics.md); this doc is only the deploy/config checklist.
+What to configure to run the cookieless PostHog setup in production on Vercel — env vars, CI/CD,
+source maps, ingestion proxy, and dashboard. For how the analytics themselves work, see
+[`analytics.md`](./analytics.md); this doc is only the production setup.
 
 **Already working** once `NEXT_PUBLIC_POSTHOG_KEY` is set: pageviews, sessions, web vitals, heatmaps,
 error capture, and custom events. The steps below add readable error stack traces and (optionally)
