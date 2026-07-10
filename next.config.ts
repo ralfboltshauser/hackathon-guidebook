@@ -42,9 +42,11 @@ const posthogUploadHost =
   rawHost && !rawHost.startsWith("/") ? rawHost : "https://eu.i.posthog.com";
 
 // Upload source maps to PostHog Error Tracking so production stack traces are readable. Runs ONLY when
-// POSTHOG_API_KEY is set (CI / Vercel build secret); skipped locally/dev so ordinary builds are
-// unaffected and never ship maps to users (deleteAfterUpload). Secrets live in the build env, never here.
-export default process.env.POSTHOG_API_KEY
+// BOTH POSTHOG_API_KEY and POSTHOG_PROJECT_ID are set (CI / Vercel build secrets); skipped locally/dev so
+// ordinary builds are unaffected and never ship maps to users (deleteAfterUpload). Gating on both avoids
+// a hard `next build` crash when only the key is set (withPostHogConfig requires a project id). Secrets
+// live in the build env, never here.
+export default process.env.POSTHOG_API_KEY && process.env.POSTHOG_PROJECT_ID
   ? withPostHogConfig(config, {
       personalApiKey: process.env.POSTHOG_API_KEY,
       projectId: process.env.POSTHOG_PROJECT_ID,

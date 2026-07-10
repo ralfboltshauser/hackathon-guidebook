@@ -25,7 +25,7 @@ campaign properties). `beforeSend` (in `client.ts`) locks this down:
 
 - **URL-bearing properties → origin + path.** The whole query string and fragment are dropped, recursively
   (nested copies + the `$set`/`$set_once` siblings included). Page-level analytics needs only the path.
-- **Campaign params.** Standard **source / medium / campaign** are kept for attribution (emails redacted);
+- **Campaign params.** Standard **source / medium / campaign / id** are kept for attribution (emails redacted);
   free-form and click-id params (`utm_term`/`utm_content`, `gclid`, `fbclid`, `mc_cid`, the referrer
   search keyword, …) are **dropped**.
 - **Fail-closed.** If sanitizing ever throws, the event is dropped rather than sent unsanitized.
@@ -83,7 +83,8 @@ never `posthog-js` directly — so swapping providers is a one-file change and s
 | `scripts/event-lint.mjs` | Build gate: rejects unknown event names and PII-looking keys. |
 
 **Bundle behaviour:** `posthog-js` is dynamically imported, so it lands in its own lazy chunk after
-hydration. With **no key set it is dead-code-eliminated to zero bytes** — analytics off costs nothing.
+hydration. With **no key set, `load()` short-circuits before the `import()`, so the posthog-js vendor chunk
+is never fetched** — the only always-present cost is the small provider/port glue (a few hundred bytes).
 
 ## Event taxonomy
 

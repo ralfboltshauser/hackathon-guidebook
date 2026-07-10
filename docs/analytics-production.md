@@ -61,11 +61,16 @@ now; move to **B** when DNS access is available.
 
 ## 5. PostHog dashboard
 
+- **Enable "Cookieless server hash mode"** in **Settings → Web analytics**. This is a **prerequisite**
+  for `cookieless_mode: 'always'` (set in `client.ts`): it's the toggle that lets PostHog compute the
+  privacy-preserving, server-side daily-salt hash used for anonymous identity. Events ingest without it,
+  but cookieless sessions won't resolve correctly until it's on.
 - Enable **Web Analytics**, **Heatmaps**, **Error tracking**. Keep **Session replay OFF** (cookieless).
 - Add the production domain(s) to the project's **authorized/allowed domains** (toolbar + web analytics).
 
 ## Go-live checklist
 
+- [ ] **"Cookieless server hash mode" ON** (Settings → Web analytics) → required by `cookieless_mode:'always'`
 - [ ] `NEXT_PUBLIC_POSTHOG_KEY` set in Vercel (Production + Preview) → analytics live
 - [ ] Web Analytics / Heatmaps / Error tracking on; replay off; domains authorized
 - [ ] `POSTHOG_API_KEY` (Error-tracking write) + `POSTHOG_PROJECT_ID` set → readable error traces

@@ -18,11 +18,13 @@ export function TrackClicks() {
       const el = (event.target as Element | null)?.closest<HTMLElement>("[data-cta]");
       if (!el) return;
       const href = el.getAttribute("href");
-      void track("cta_click", {
-        location: el.dataset.cta,
-        // Strip any query/fragment PII from the href before it becomes an event property.
-        target: href ? (sanitizeUrl(href) as string) : undefined,
-      });
+      // Strip query/fragment PII from the href (sanitizeUrl). For a non-web scheme (`mailto:`, `tel:`)
+      // keep ONLY the scheme, so an email/phone in a future `data-cta` link can't ride along as a property.
+      let target = href ? (sanitizeUrl(href) as string) : undefined;
+      if (target && /^[a-z][a-z0-9+.-]*:/i.test(target) && !/^https?:/i.test(target)) {
+        target = `${target.slice(0, target.indexOf(":"))}:`;
+      }
+      void track("cta_click", { location: el.dataset.cta, target });
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);

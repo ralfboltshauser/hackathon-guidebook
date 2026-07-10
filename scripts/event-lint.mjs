@@ -11,10 +11,13 @@
  * (preceded by `{` or `,`, followed by `:`), so ternary/label colons don't false-positive.
  *
  * Handles multi-line calls, comments between `track` and `(`, regex/division, quoted/shorthand/computed
- * property keys, and executable MDX under content/. Accepted static-analysis limits (documented, not
- * bugs — an AST rule would close them, but the repo calls the bare `track(...)` helper, so none occur):
- * a dynamic event NAME (variable/template) isn't validated, `$`-prefixed names are allowed, and
- * generic/optional call forms (`track<T>(…)`, `track?.(…)`) aren't matched.
+ * property keys, snake_case AND camelCase PII keys (normalized before matching), and executable MDX under
+ * content/. It also forbids importing `posthog-js` outside `lib/analytics/`, which closes the
+ * `posthog.capture(...)` member-call escape (that call form only exists behind a direct import).
+ * Accepted static-analysis limits (documented, not bugs — an AST rule would close them, but the repo
+ * calls the bare `track(...)` helper, so none occur): a dynamic event NAME (variable/template) isn't
+ * validated, `$`-prefixed names are allowed, and generic/optional call forms (`track<T>(…)`,
+ * `track?.(…)`) aren't matched.
  * Regression fixtures live in scripts/event-lint.test.mjs. Ported from the NoaIQ marketing site.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -28,8 +31,15 @@ const PII_TOKEN =
   /(?:^|_)(email|phone|telephone|password|passwd|pwd|ssn|dob|firstname|lastname|fullname|surname)(?:_|$)|(?:^|_)(first|last|full)_?name(?:_|$)|(?:^|_)ip(?:_?addr(?:ess)?)?(?:_|$)/i;
 
 function isPiiKey(key) {
-  if (key === "email_sha256" || /_(sha256|hash|hashed)$/i.test(key)) return false; // hashed forms are ok
-  return PII_TOKEN.test(key);
+  // Normalize camelCase → snake_case first, so `userEmail`/`phoneNumber`/`emailAddress` are caught like
+  // their snake_case forms. JS's default key casing has no `_`, so it would otherwise slip straight past
+  // the `_`-delimited PII_TOKEN boundaries — and nothing enforces snake_case, so this was a real hole.
+  const norm = key
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .toLowerCase();
+  if (norm === "email_sha256" || /_(sha256|hash|hashed)$/.test(norm)) return false; // hashed forms are ok
+  return PII_TOKEN.test(norm);
 }
 
 /** Parse the allowed event names from the EVENTS enum source. */
@@ -176,6 +186,17 @@ export function lintText(rel, text, allowed) {
   if (rel.startsWith("lib/analytics/")) return [];
   const toks = tokenize(text);
   const problems = [];
+
+  // The analytics port is the ONLY module allowed to import posthog-js. A direct import elsewhere lets
+  // code call `posthog.capture("evt", { email })` — a member call the taxonomy/PII scan below can't reach
+  // (it only matches the bare `track(`/`capture(` helper) — so forbid the import and route everyone
+  // through the typed `@/lib/analytics` helpers. Token-based (comments are stripped), so no false positives.
+  for (const tok of toks) {
+    if (tok.type === "string" && tok.text === "posthog-js") {
+      problems.push(`${rel}:${lineAt(text, tok.index)}  direct posthog-js import — use the typed helpers in @/lib/analytics instead`);
+      break;
+    }
+  }
 
   for (let t = 0; t < toks.length; t++) {
     const tok = toks[t];

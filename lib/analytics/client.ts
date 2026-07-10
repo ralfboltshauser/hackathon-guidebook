@@ -60,9 +60,10 @@ export function isPageLikelyTranslated(): boolean {
   return document.querySelector("font") !== null; // translators wrap swapped text in <font>
 }
 
-/** URL-bearing PostHog keys, sanitized WHEREVER they appear — top-level and nested (e.g. the per-metric
- *  `$current_url` inside a `$web_vitals` event, or `$set_once` initial URLs). Recursive, so a new nested
- *  URL property is covered without listing its path. */
+/** URL-bearing PostHog keys, reduced to origin+path WHEREVER they appear in the tree — top-level and
+ *  nested (e.g. the per-metric `$current_url` inside a `$web_vitals` event, or `$set_once` initial URLs).
+ *  `sanitizeProps` recurses the whole object, but only keys LISTED HERE are treated as URLs — a URL that
+ *  arrives under a new key name must be added to this set (free-text strings are handled separately). */
 const URL_KEYS = new Set([
   "$current_url",
   "$referrer",
@@ -95,6 +96,35 @@ export function sanitizeUrl(value: unknown): unknown {
     return u.host === "_" ? u.pathname : `${u.origin}${u.pathname}`;
   } catch {
     return value.replace(/[?#].*$/, ""); // URLs are single-line; no dotAll needed
+  }
+}
+
+/**
+ * Reduce a free-text string (an exception message) to a PII-safe form: strip the query/fragment off any
+ * embedded `http(s)` URL and redact emails. `sanitizeProps` only scrubs *named* URL/campaign keys, but
+ * `capture_exceptions` is on, so an `Error("failed https://api/u?token=…&email=a@b.com")` would otherwise
+ * ship its message verbatim to Error Tracking. Developer-authored text mostly, but not always.
+ */
+function scrubText(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  return value
+    .replace(/https?:\/\/[^\s"'<>]+/g, (u) => String(sanitizeUrl(u)))
+    .replace(EMAIL_RE, "<redacted>");
+}
+
+/** Scrub the human-readable message(s) of an `$exception` payload (see scrubText). Frame filenames are
+ *  our own chunk URLs (no PII) and are left for source-map resolution. */
+function scrubExceptionMessages(props: Record<string, unknown>): void {
+  const list = props.$exception_list;
+  if (Array.isArray(list)) {
+    for (const ex of list) {
+      if (ex && typeof ex === "object" && typeof (ex as { value?: unknown }).value === "string") {
+        (ex as { value: unknown }).value = scrubText((ex as { value: unknown }).value);
+      }
+    }
+  }
+  if (Array.isArray(props.$exception_values)) {
+    props.$exception_values = props.$exception_values.map(scrubText);
   }
 }
 
@@ -159,6 +189,7 @@ export function beforeSend(
     if (value && REACT_HYDRATION_ERROR.test(value) && isTranslated()) return null;
   }
   try {
+    if (payload.event === "$exception" && payload.properties) scrubExceptionMessages(payload.properties);
     if (payload.properties) sanitizeProps(payload.properties);
     if (payload.$set) sanitizeProps(payload.$set);
     if (payload.$set_once) sanitizeProps(payload.$set_once);
