@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 import { GuidebookHeader } from "@/components/guidebook/GuidebookHeader";
 import { HackView } from "@/components/guidebook/HackView";
 import { LearnView } from "@/components/guidebook/LearnView";
@@ -56,8 +57,19 @@ export function Guidebook() {
   );
 
   const selectMode = (nextMode: Mode) => {
+    void track("tab_switched", { tab: nextMode });
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     setViewState(nextMode, phaseIdx);
+  };
+
+  const handleToggleCheck = (key: string) => {
+    // key is `phaseIdx:groupIdx:itemIdx` (static) or `custom:<id>`; phaseIdx is the leading segment.
+    const phase = Number.parseInt(key.split(":")[0], 10);
+    void track("checklist_item_toggled", {
+      phase: Number.isNaN(phase) ? undefined : phase,
+      checked: !done[key],
+    });
+    toggleCheck(key);
   };
 
   const openChecklist = (i: number) => {
@@ -122,7 +134,7 @@ export function Guidebook() {
           customTodos={customTodos}
           totalDone={allDone}
           totalChecks={allChecks}
-          onToggle={toggleCheck}
+          onToggle={handleToggleCheck}
           onAddCustomTodo={addCustomTodo}
           onRemoveCustomTodo={removeCustomTodo}
           onResetProgress={resetProgress}

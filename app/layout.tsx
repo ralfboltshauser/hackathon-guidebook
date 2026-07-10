@@ -3,6 +3,7 @@ import { Atkinson_Hyperlegible } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { siteAuthors, siteDescription, siteTitle, siteUrl } from "@/lib/site";
 import { AgentationOverlay } from "./AgentationOverlay";
+import { PostHogProvider } from "./PostHogProvider";
 import "./globals.css";
 
 const atkinson = Atkinson_Hyperlegible({
@@ -82,7 +83,7 @@ export default function RootLayout({
       className={`${atkinson.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
         {process.env.NODE_ENV === "development" && <AgentationOverlay />}
         <Analytics />
       </body>
