@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { deepDives } from "@/lib/deep-dives";
 import { siteUrl } from "@/lib/site";
 
-const lastModified = new Date("2026-07-04T00:00:00.000Z");
+const lastModified = new Date("2026-07-12T00:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -11,6 +11,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "monthly",
       priority: 1,
+    },
+    {
+      url: `${siteUrl}/learn`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.9,
     },
     {
       url: `${siteUrl}/about`,
