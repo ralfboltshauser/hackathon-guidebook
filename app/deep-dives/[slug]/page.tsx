@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { DeepDiveHeader } from "@/components/deep-dives/DeepDiveHeader";
-import { DraftBadge } from "@/components/deep-dives/DraftBadge";
 import { deepDives, getDeepDive, getDeepDiveOgImagePath } from "@/lib/deep-dives";
 import { siteAuthors, siteTitle } from "@/lib/site";
 
@@ -73,6 +72,12 @@ export async function generateMetadata({
   };
 }
 
+const gridBackground = {
+  backgroundImage:
+    "linear-gradient(to right, rgba(16, 16, 16, 0.07) 1px, transparent 1px)",
+  backgroundSize: "25% 100%",
+};
+
 export default async function DeepDivePage({ params }: DeepDivePageProps) {
   const { slug } = await params;
   const deepDive = getDeepDive(slug);
@@ -93,82 +98,126 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
     : deepDives.filter((d) => d.slug !== deepDive.slug).slice(0, 3);
 
   return (
-    <main className="min-h-screen bg-page font-serif text-ink">
+    <main className="min-h-screen bg-[#f7f7f4] font-sans text-[#101010] [--accent-strong:#2722aa] [--accent:#3834dc] [--ink:#101010] [--muted:#6f6f6f] [--page:#ffffff] [--panel-strong:#e7e7e3] [--panel:#f4f4f2]">
       <DeepDiveHeader />
 
-      <article>
-        {/* Wide article header */}
-        <header className="border-b border-ink/15">
-          <div className="mx-auto max-w-[56rem] px-4 py-10 sm:px-6 lg:py-14">
-            <Link
-              href="/deep-dives"
-              className="inline-flex items-center gap-2 font-sans text-sm text-ink/50 transition-colors hover:text-accent"
-            >
-              <ArrowLeft aria-hidden="true" size={14} />
-              Deep dives
-            </Link>
+      <div
+        className="mx-auto max-w-[1024px] border-x border-black/10 bg-white"
+        style={gridBackground}
+      >
+        <article>
+          <header className="grid border-b border-black/15 sm:grid-cols-4">
+            <div className="flex flex-col items-start gap-8 px-5 pb-5 pt-10 sm:px-6 sm:py-14">
+              <p className="text-[10px] font-medium tracking-[0.14em] text-[#3834dc]">
+                #003
+              </p>
+              <Link
+                href="/deep-dives"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black bg-white px-3 py-1.5 text-[10px] transition-colors hover:border-[#3834dc] hover:text-[#3834dc]"
+              >
+                <ArrowLeft aria-hidden="true" size={11} />
+                Deep Dives
+              </Link>
+            </div>
 
-            <div className="mt-10">
-              <div className="mb-5 flex flex-wrap items-center gap-3">
-                <DraftBadge />
-                <span className="font-sans text-[11px] uppercase tracking-[0.18em] text-muted">
-                  {deepDive.phase} · {deepDive.artifact} · {deepDive.readTime}
+            <div className="px-5 pb-12 sm:col-span-3 sm:px-6 sm:py-14">
+              <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                <span className="rounded-full bg-[#3834dc] px-3 py-1.5 text-white">
+                  {deepDive.status}
+                </span>
+                <span className="rounded-full border border-black bg-white px-3 py-1.5">
+                  {deepDive.phase}
+                </span>
+                <span className="rounded-full border border-black bg-white px-3 py-1.5">
+                  {deepDive.artifact}
+                </span>
+                <span className="rounded-full border border-black bg-white px-3 py-1.5">
+                  {deepDive.readTime}
                 </span>
               </div>
-              <h1 className="text-[clamp(2.4rem,5.5vw,4rem)] font-light leading-[0.93]">
+
+              <h1 className="mt-9 max-w-3xl text-[clamp(2.65rem,6vw,4.8rem)] font-normal leading-[0.94] tracking-[-0.055em] text-[#101010]">
                 {deepDive.title}
               </h1>
-              <p className="mt-6 font-sans text-lg leading-7 text-ink/60">
+              <p className="mt-7 max-w-2xl text-lg leading-7 text-black/58">
                 {deepDive.description}
               </p>
             </div>
+          </header>
+
+          <div className="grid grid-cols-1 border-b border-black/15 bg-white lg:grid-cols-4">
+            <aside className="min-w-0 border-b border-black/15 px-5 py-8 sm:px-6 lg:border-b-0 lg:border-r">
+              <dl className="grid gap-6 text-[11px] sm:grid-cols-3 lg:sticky lg:top-20 lg:grid-cols-1">
+                <div>
+                  <dt className="text-black/38">Written by</dt>
+                  <dd className="mt-1 text-black/72">{siteAuthors[0].name}</dd>
+                </div>
+                <div>
+                  <dt className="text-black/38">Reading time</dt>
+                  <dd className="mt-1 text-black/72">{deepDive.readTime}</dd>
+                </div>
+                <div>
+                  <dt className="text-black/38">Working status</dt>
+                  <dd className="mt-1 max-w-40 leading-5 text-black/72">
+                    {deepDive.draftNote}
+                  </dd>
+                </div>
+              </dl>
+            </aside>
+
+            <div className="min-w-0 px-5 py-12 sm:px-8 sm:py-16 lg:col-span-3 lg:px-12 lg:py-20">
+              <div className="max-w-[42rem]">
+                <Content />
+              </div>
+            </div>
           </div>
-        </header>
+        </article>
 
-        {/* Centered narrow prose */}
-        <div className="mx-auto max-w-[56rem] px-4 py-14 sm:px-6 lg:py-20">
-          <Content />
-        </div>
-      </article>
+        {otherDives.length > 0 && (
+          <footer className="bg-white">
+            <div className="flex items-center justify-between gap-5 border-b border-black/15 px-5 py-5 sm:px-6">
+              <p className="text-[10px] text-black/48">
+                {related.length > 0 ? `More from ${deepDive.phase}` : "More deep dives"}
+              </p>
+              <Link
+                href="/deep-dives"
+                className="text-[10px] text-[#3834dc] transition-colors hover:text-[#2722aa]"
+              >
+                View all
+              </Link>
+            </div>
 
-      {/* Related articles footer */}
-      {otherDives.length > 0 && (
-        <footer className="border-t border-ink/15">
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
-            <p className="font-sans text-[11px] font-bold uppercase tracking-[0.28em] text-muted">
-              {related.length > 0 ? `More from ${deepDive.phase}` : "More deep dives"}
-            </p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {otherDives.map((item) => (
+            <div className="grid sm:grid-cols-3">
+              {otherDives.map((item, index) => (
                 <Link
                   key={item.slug}
                   href={`/deep-dives/${item.slug}`}
-                  className="group flex flex-col justify-between border border-ink/15 bg-page p-5 transition-colors hover:border-accent/40 hover:bg-panel"
+                  className={`group flex min-h-[270px] flex-col border-black/15 p-5 transition-colors hover:bg-[#fafaf7] sm:p-6 ${
+                    index < otherDives.length - 1 ? "border-b sm:border-b-0 sm:border-r" : ""
+                  }`}
                 >
-                  <div>
-                    <h3 className="text-xl leading-snug text-ink">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 font-sans text-sm leading-6 text-ink/50">
-                      {item.description}
-                    </p>
-                  </div>
-                  <div className="mt-6 flex items-center justify-between">
-                    <span className="font-sans text-[10px] uppercase tracking-[0.18em] text-muted">
+                  <span className="text-[10px] text-black/44">{item.phase}</span>
+                  <h2 className="mt-7 text-2xl leading-[1.04] tracking-[-0.035em]">
+                    {item.title}
+                  </h2>
+                  <p className="mt-4 text-sm leading-6 text-black/54">
+                    {item.description}
+                  </p>
+                  <div className="mt-auto flex items-end justify-between gap-3 pt-8">
+                    <span className="text-[10px] text-black/42">
                       {item.artifact} · {item.readTime}
                     </span>
-                    <ArrowUpRight
-                      aria-hidden="true"
-                      size={14}
-                      className="text-ink/25 transition-colors group-hover:text-accent"
-                    />
+                    <span className="rounded-full bg-[#3834dc] px-2.5 py-1 text-[10px] text-white transition-colors group-hover:bg-[#2722aa]">
+                      Read
+                      <ArrowUpRight aria-hidden="true" className="ml-1 inline" size={10} />
+                    </span>
                   </div>
                 </Link>
               ))}
             </div>
-          </div>
-        </footer>
-      )}
+          </footer>
+        )}
+      </div>
     </main>
   );
 }

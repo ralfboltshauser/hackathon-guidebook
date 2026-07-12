@@ -65,15 +65,6 @@ export function Guidebook() {
     setViewState("hack", i);
   };
 
-  const selectPhase = (i: number) => {
-    setPhase(i);
-
-    if (mode === "learn") {
-      setPendingScrollPhase(i);
-      scrollToPhase(i);
-    }
-  };
-
   useEffect(() => {
     migrateLegacyProgress();
   }, [migrateLegacyProgress]);
@@ -93,18 +84,18 @@ export function Guidebook() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-page font-serif text-ink">
+    <div
+      className={`min-h-screen font-serif ${
+        mode === "hack" ? "bg-black text-[#f1f4ff]" : "bg-page text-ink"
+      }`}
+    >
       <GuidebookHeader
         mode={mode}
-        phaseIdx={phaseIdx}
-        done={done}
-        customTodos={customTodos}
         onLogoClick={() => {
           window.scrollTo({ top: 0, left: 0, behavior: "auto" });
           setViewState("learn", 0);
         }}
         onModeChange={selectMode}
-        onPhaseSelect={selectPhase}
       />
 
       {mode === "learn" ? (

@@ -1,16 +1,8 @@
 import type { Metadata } from "next";
-import { Atkinson_Hyperlegible } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { siteAuthors, siteDescription, siteTitle, siteUrl } from "@/lib/site";
 import { AgentationOverlay } from "./AgentationOverlay";
 import "./globals.css";
-
-const atkinson = Atkinson_Hyperlegible({
-  variable: "--font-atkinson",
-  weight: ["400", "700"],
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -77,10 +69,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${atkinson.variable} h-full antialiased`}
-    >
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
         {process.env.NODE_ENV === "development" && <AgentationOverlay />}

@@ -33,53 +33,93 @@ export function LearnView({
   const startPhase = useRef(initialPhase);
 
   useEffect(() => {
-    if (startPhase.current > 0) scrollToPhase(startPhase.current, false);
+    if (startPhase.current > 0) {
+      scrollToPhase(startPhase.current, false);
+    }
   }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const phase = Number((entry.target as HTMLElement).dataset.phase);
+          if (!entry.isIntersecting) {
+            continue;
+          }
 
-            if (pendingScrollPhase !== null && phase !== pendingScrollPhase) {
-              continue;
-            }
+          const phase = Number((entry.target as HTMLElement).dataset.phase);
 
-            onActivePhase(phase);
+          if (pendingScrollPhase !== null && phase !== pendingScrollPhase) {
+            continue;
+          }
 
-            if (phase === pendingScrollPhase) {
-              onPendingScrollSettled();
-            }
+          onActivePhase(phase);
+
+          if (phase === pendingScrollPhase) {
+            onPendingScrollSettled();
           }
         }
       },
-      { rootMargin: "-42% 0px -52% 0px", threshold: 0 },
+      { rootMargin: "-26% 0px -62% 0px", threshold: 0 },
     );
+
     document
       .querySelectorAll("[data-phase]")
-      .forEach((el) => observer.observe(el));
+      .forEach((element) => observer.observe(element));
+
     return () => observer.disconnect();
   }, [onActivePhase, onPendingScrollSettled, pendingScrollPhase]);
 
   return (
-    <main className="pb-28">
+    <main className="overflow-hidden bg-page pb-24">
       <Hero
         onStart={() => scrollToPhase(0)}
         onChecklists={() => onOpenChecklist(0)}
       />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        {guide.map((phase, i) => (
-          <PhaseArticle
-            key={phase.n}
-            phase={phase}
-            index={i}
-            onOpenChecklist={() => onOpenChecklist(i)}
-          />
-        ))}
-      </div>
+      <section className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="border-x border-ink/15">
+          <header className="relative overflow-hidden border-y border-ink/20 px-5 py-12 sm:px-9 sm:py-16">
+            <span className="absolute inset-y-0 left-1/4 hidden w-px bg-ink/10 lg:block" />
+            <span className="absolute inset-y-0 right-1/4 hidden w-px bg-ink/10 lg:block" />
+            <p className="relative font-sans text-[10px] text-accent">002</p>
+            <div className="relative mx-auto mt-14 max-w-3xl text-center">
+              <span className="inline-flex rounded-md bg-accent px-3 py-1 font-sans text-[11px] text-white">
+                Problem:
+              </span>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 560 128"
+                className="mx-auto h-20 w-full max-w-xl text-ink/60"
+                fill="none"
+              >
+                <path
+                  d="M34 18c0 65 50 78 194 78 99 0 157-35 238-18 31 7 53 18 58 34"
+                  stroke="currentColor"
+                  strokeWidth="1.25"
+                />
+              </svg>
+              <h2 className="-mt-6 text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.88] tracking-[-0.06em]">
+                The 6 Phases
+              </h2>
+              <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-ink/62">
+                A field guide for turning a short weekend into a deliberate team
+                advantage.
+              </p>
+            </div>
+          </header>
+
+          <div className="px-5 sm:px-9">
+            {guide.map((phase, index) => (
+              <PhaseArticle
+                key={phase.n}
+                phase={phase}
+                index={index}
+                onOpenChecklist={() => onOpenChecklist(index)}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
@@ -101,109 +141,87 @@ function Hero({
 
     const interval = window.setInterval(() => {
       setActivePhoto((current) => (current + 1) % WIN_PHOTOS.length);
-    }, 3000);
+    }, 3800);
 
     return () => window.clearInterval(interval);
   }, [isPhotoCyclePaused]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-16">
-      <div className="grid gap-12 border-b border-ink/15 pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)] lg:items-start lg:gap-16 lg:pb-16">
-        <div className="lg:pt-2">
-          <p className="font-sans text-xs uppercase tracking-[0.35em] text-accent">
-            The hackathon playbook
-          </p>
-          <h1 className="mt-6 text-[clamp(2.8rem,7vw,5.75rem)] font-light leading-[0.9]">
-            Everything we learned winning and losing hackathons.
-          </h1>
-          <p className="mt-7 max-w-xl text-xl font-light leading-snug text-ink/80">
-            We have spent years competing in hackathons, using each one to push
-            the edge of what we could build and learn. These are the lessons that
-            kept proving themselves.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center gap-3">
-            <button
-              onClick={onStart}
-              className="group inline-flex items-center gap-2 rounded-none bg-accent px-6 py-3.5 font-sans text-sm font-medium text-page transition-colors hover:bg-accent-strong"
-            >
-              Open the playbook
-              <span className="transition-transform group-hover:translate-x-1">
-                &rarr;
-              </span>
-            </button>
-            <button
-              onClick={onChecklists}
-              className="inline-flex items-center rounded-none border border-ink/25 px-6 py-3.5 font-sans text-sm font-medium text-ink/80 transition-colors hover:border-accent hover:text-ink"
-            >
-              Go to the checklists
-            </button>
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="relative overflow-hidden border border-ink/25">
+        <span className="absolute inset-y-0 left-1/4 hidden w-px bg-ink/10 lg:block" />
+        <span className="absolute inset-y-0 right-1/4 hidden w-px bg-ink/10 lg:block" />
+        <div className="absolute inset-x-0 top-[7.25rem] h-px bg-ink/10" />
+        <p className="absolute left-5 top-5 z-10 font-sans text-[10px] text-accent sm:left-7">
+          001
+        </p>
+        <div className="grid min-h-[38rem] lg:grid-cols-[1.08fr_.92fr]">
+          <div className="relative flex flex-col justify-end px-5 pb-8 pt-28 sm:px-9 sm:pb-11 lg:pt-36">
+            <p className="font-sans text-[11px] text-ink/58">available now</p>
+            <h1 className="mt-7 max-w-xl text-[clamp(3.6rem,8vw,7.8rem)] leading-[0.78] tracking-[-0.075em]">
+              Structure your{" "}
+              <span className="block text-accent">thinking.</span>
+            </h1>
+            <p className="mt-7 max-w-md text-base leading-7 text-ink/66">
+              The patterns, checklists, and hard-won context behind teams that
+              repeatedly made their hackathon weekends count.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                onClick={onStart}
+                className="rounded-lg bg-accent px-5 py-3 font-sans text-sm font-medium text-white transition-colors hover:bg-accent-strong"
+              >
+                Read the playbook
+              </button>
+              <button
+                onClick={onChecklists}
+                className="rounded-lg border border-ink/30 bg-page px-5 py-3 font-sans text-sm transition-colors hover:border-accent hover:text-accent"
+              >
+                Open checklist
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="overflow-hidden rounded-none border border-ink/15 shadow-sm">
-          <div className="relative h-52 overflow-hidden bg-panel sm:h-60">
-            {WIN_PHOTOS.map((src, i) => (
-              <Image
-                key={src}
-                src={src}
-                alt={wins[i]?.event ?? ""}
-                fill
-                unoptimized
-                sizes="(max-width: 1024px) 100vw, 480px"
-                className={`object-cover object-center transition-opacity duration-500 ease-in-out ${
-                  activePhoto === i ? "opacity-100" : "opacity-0"
-                }`}
-                priority={i === 0}
-              />
-            ))}
-            <div className="absolute bottom-3 left-4 z-10 h-5">
-              {wins.map((w, i) => (
-                <span
-                  key={w.event}
-                  className={`absolute bottom-0 left-0 whitespace-nowrap rounded-none bg-page/70 px-2 py-0.5 font-sans text-[9px] uppercase tracking-[0.22em] text-ink/80 backdrop-blur-sm transition-opacity duration-500 ${
-                    activePhoto === i ? "opacity-100" : "opacity-0"
+          <div className="relative border-t border-ink/15 bg-panel/35 lg:border-l lg:border-t-0">
+            <div className="relative h-72 overflow-hidden border-b border-ink/15 sm:h-80 lg:h-[23.5rem]">
+              {WIN_PHOTOS.map((source, index) => (
+                <Image
+                  key={source}
+                  src={source}
+                  alt={wins[index]?.event ?? "Hackathon team"}
+                  fill
+                  loading={index === 0 ? "eager" : "lazy"}
+                  sizes="(max-width: 1023px) calc(100vw - 2rem), 40vw"
+                  className={`object-cover transition-opacity duration-700 ${
+                    activePhoto === index ? "opacity-100" : "opacity-0"
                   }`}
-                >
-                  {w.event}
-                </span>
+                />
               ))}
+              <span className="absolute bottom-4 left-4 bg-page px-2 py-1 font-sans text-[10px] text-ink/70">
+                {wins[activePhoto]?.event}
+              </span>
             </div>
-          </div>
-
-          <div className="bg-panel/70 px-6 pb-6 pt-2 sm:px-7 sm:pb-7">
-            <div className="flex items-baseline justify-between border-b border-ink/15 pb-3">
-              <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-muted">
-                Track record
-              </p>
-              <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink/45">
-                2023 &ndash; 2025
-              </p>
-            </div>
-            <ul onMouseLeave={() => setIsPhotoCyclePaused(false)}>
-              {wins.map((w, i) => (
-                <li
-                  key={w.event}
-                  onMouseEnter={() => {
-                    setIsPhotoCyclePaused(true);
-                    setActivePhoto(i);
-                  }}
-                  className="border-b border-ink/10 last:border-0"
-                >
+            <ul
+              onMouseLeave={() => setIsPhotoCyclePaused(false)}
+              className="divide-y divide-ink/10 px-5 py-3 sm:px-7"
+            >
+              {wins.slice(0, 4).map((win, index) => (
+                <li key={win.event}>
                   <WinItem
-                    href={w.href}
-                    className="group flex items-baseline justify-between gap-4 py-3"
+                    href={win.href}
+                    className={`flex items-center justify-between gap-4 py-2.5 text-sm transition-colors ${
+                      activePhoto === index
+                        ? "text-accent"
+                        : "text-ink/68 hover:text-accent"
+                    }`}
+                    onMouseEnter={() => {
+                      setIsPhotoCyclePaused(true);
+                      setActivePhoto(index);
+                    }}
                   >
-                    <span
-                      className={`block text-base leading-tight transition-colors duration-200 ${
-                        activePhoto === i
-                          ? "text-accent"
-                          : "group-hover:text-accent"
-                      }`}
-                    >
-                      {w.event}
-                    </span>
-                    <span className="flex-shrink-0 font-sans text-xs uppercase tracking-wider text-accent">
-                      {w.place}
+                    <span>{win.event}</span>
+                    <span className="font-sans text-[10px] uppercase tracking-[0.12em]">
+                      {win.place}
                     </span>
                   </WinItem>
                 </li>
@@ -220,17 +238,29 @@ function WinItem({
   href,
   className,
   children,
+  onMouseEnter,
 }: {
   href?: string;
   className: string;
   children: ReactNode;
+  onMouseEnter: () => void;
 }) {
   if (!href) {
-    return <div className={className}>{children}</div>;
+    return (
+      <div className={className} onMouseEnter={onMouseEnter}>
+        {children}
+      </div>
+    );
   }
 
   return (
-    <a href={href} target="_blank" rel="noreferrer" className={className}>
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className={className}
+      onMouseEnter={onMouseEnter}
+    >
       {children}
     </a>
   );
@@ -249,123 +279,89 @@ function PhaseArticle({
     <section
       id={`phase-${index}`}
       data-phase={index}
-      className="scroll-mt-32 border-b border-ink/12 py-14 first:pt-2 last:border-0 sm:py-20"
+      className="scroll-mt-16 border-b border-ink/15 py-14 first:pt-12 sm:py-20"
     >
-      <header className="max-w-4xl">
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="font-sans text-xs uppercase tracking-[0.35em] text-accent">
-            Phase {phase.n}
+      <header className="grid gap-6 border-b border-ink/15 pb-9 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10">
+        <div>
+          <p className="font-sans text-xs text-accent">
+            {phase.n.padStart(2, "0")}
           </p>
-          <span className="h-px w-8 bg-ink/20" />
-          <p className="font-sans text-xs uppercase tracking-[0.22em] text-muted">
-            {phase.timebox}
+          <p className="mt-2 font-sans text-[11px] text-ink/50">{phase.timebox}</p>
+        </div>
+        <div>
+          <h2 className="text-[clamp(2.5rem,6.4vw,5.2rem)] leading-[0.84] tracking-[-0.06em] text-accent">
+            {phase.title}
+          </h2>
+          <p className="mt-5 max-w-3xl text-xl leading-8 text-ink/70 sm:text-2xl">
+            {phase.thesis}
           </p>
         </div>
-        <h2 className="mt-5 text-[clamp(2.8rem,7vw,5.5rem)] font-light leading-[0.9]">
-          {phase.title}
-        </h2>
-        <p className="mt-6 text-2xl font-light leading-snug text-ink/80 sm:text-[1.75rem] sm:leading-snug">
-          {phase.thesis}
-        </p>
       </header>
 
-      <div className="mt-8 max-w-4xl border-l-2 border-accent bg-panel/60 py-5 pl-6 pr-5">
-        <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">
-          Field Rule
-        </p>
-        <p className="mt-2 text-xl leading-snug text-ink/88">
-          {phase.fieldRule}
-        </p>
-      </div>
-
-      <div className="mt-14">
-        <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-muted">
-          The Work
-        </p>
-        <div className="mt-2 space-y-12">
-          {phase.sections.map((section, si) => (
-            <section key={section.title} className="border-t border-ink/12 pt-8">
-              <div className="grid gap-x-10 gap-y-4 lg:grid-cols-[4.5rem_minmax(0,1fr)]">
-                <div className="font-sans text-sm tabular-nums text-accent lg:pt-1.5">
-                  {phase.n}.{String(si + 1).padStart(2, "0")}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-2xl font-light leading-tight sm:text-3xl">
-                    {section.title}
-                  </h3>
-                  <p className="mt-3 max-w-2xl font-sans text-[15px] leading-7 text-ink/65">
-                    {section.intent}
-                  </p>
-                  <div className="mt-6 grid gap-x-10 gap-y-7 lg:grid-cols-2">
-                    <div>
-                      <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-ink/55">
-                        Do
-                      </p>
-                      <ul className="mt-3 space-y-3">
-                        {section.moves.map((move) => (
-                          <li
-                            key={move}
-                            className="flex gap-3 font-sans text-sm leading-6 text-ink/85"
-                          >
-                            <span className="mt-[0.4rem] h-1.5 w-1.5 flex-shrink-0 rounded-none bg-accent" />
-                            <span>{move}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {section.avoid?.length ? (
-                      <div className="lg:border-l lg:border-ink/10 lg:pl-10">
-                        <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-accent/75">
-                          Avoid
-                        </p>
-                        <ul className="mt-3 space-y-3">
-                          {section.avoid.map((item) => (
-                            <li
-                              key={item}
-                              className="flex gap-3 font-sans text-sm leading-6 text-ink/55"
-                            >
-                              <span className="mt-px flex-shrink-0 text-xs text-accent/70">
-                                &times;
-                              </span>
-                              <span>{item}</span>
+      <div className="grid gap-7 pt-8 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10">
+        <div className="font-sans text-[11px] text-ink/50">Field rule</div>
+        <div>
+          <p className="max-w-3xl text-lg leading-8 text-ink/85">{phase.fieldRule}</p>
+          <div className="mt-10 space-y-10">
+            {phase.sections.map((section, sectionIndex) => (
+              <section key={section.title} className="border-t border-ink/15 pt-6">
+                <div className="grid gap-5 lg:grid-cols-[4rem_minmax(0,1fr)]">
+                  <span className="font-sans text-xs text-accent">
+                    {phase.n}.{String(sectionIndex + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3 className="text-2xl leading-tight sm:text-3xl">{section.title}</h3>
+                    <p className="mt-3 max-w-2xl text-[15px] leading-7 text-ink/62">
+                      {section.intent}
+                    </p>
+                    <div className="mt-6 grid gap-7 sm:grid-cols-2">
+                      <div>
+                        <p className="font-sans text-[11px] text-accent">Do</p>
+                        <ul className="mt-3 space-y-2.5 text-sm leading-6 text-ink/82">
+                          {section.moves.map((move) => (
+                            <li key={move} className="flex gap-3">
+                              <span className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
+                              <span>{move}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                    ) : null}
+                      {section.avoid?.length ? (
+                        <div className="border-l border-ink/10 pl-5">
+                          <p className="font-sans text-[11px] text-ink/52">Avoid</p>
+                          <ul className="mt-3 space-y-2.5 text-sm leading-6 text-ink/55">
+                            {section.avoid.map((item) => (
+                              <li key={item} className="flex gap-3">
+                                <span aria-hidden="true" className="text-accent">
+                                  ×
+                                </span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-10 overflow-hidden rounded-none bg-panel-strong text-ink">
-        <div className="grid gap-6 p-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-10">
-          <div>
-            <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-accent-strong">
-              Mantra
-            </p>
-            <p className="mt-3 text-2xl font-light italic leading-snug sm:text-3xl">
-              &quot;{phase.mantra}&quot;
-            </p>
+              </section>
+            ))}
           </div>
-          <button
-            onClick={onOpenChecklist}
-            className="group flex items-center justify-between gap-4 rounded-none border border-ink/25 px-5 py-4 text-left transition-colors hover:border-accent-strong hover:bg-ink/5 sm:flex-col sm:items-start sm:gap-2"
-          >
-            <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-accent-strong">
-              Now do it
-            </span>
-            <span className="flex items-center gap-2 text-lg">
+
+          <div className="mt-10 grid gap-5 border border-ink/20 bg-panel/55 p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:p-8">
+            <div>
+              <p className="font-sans text-[11px] text-accent">Mantra</p>
+              <p className="mt-3 max-w-2xl text-xl italic leading-8 text-ink/80">
+                &quot;{phase.mantra}&quot;
+              </p>
+            </div>
+            <button
+              onClick={onOpenChecklist}
+              className="rounded-lg bg-accent px-5 py-3 font-sans text-sm font-medium text-white transition-colors hover:bg-accent-strong"
+            >
               Open checklist
-              <span className="transition-transform group-hover:translate-x-1">
-                &rarr;
-              </span>
-            </span>
-          </button>
+            </button>
+          </div>
         </div>
       </div>
     </section>

@@ -167,43 +167,43 @@ export function HackView({
     <main
       ref={viewRef}
       onKeyDown={handleChecklistKeyDown}
-      className="mx-auto grid max-w-7xl gap-8 px-4 pb-28 pt-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px]"
+      className="mx-auto grid max-w-6xl gap-8 px-4 pb-20 pt-7 sm:px-6 sm:pt-10"
     >
-      <section className="min-w-0">
-        <div className="flex flex-col gap-5 border-b border-ink/15 pb-8 sm:flex-row sm:items-end sm:justify-between">
+      <section className="min-w-0 border-x border-white/15 px-5 sm:px-8">
+        <div className="flex flex-col gap-5 border-b border-white/20 pb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-sans text-xs uppercase tracking-[0.35em] text-accent">
-              Checklist / Phase {phase.n}
+            <p className="font-sans text-[10px] text-[#8daaff]">
+              004
             </p>
-            <h1 className="mt-2 text-[clamp(2.75rem,8vw,6rem)] font-light leading-[0.9]">
-              {phase.title}
+            <h1 className="mt-2 text-[clamp(2.5rem,6vw,4.25rem)] leading-[0.84] tracking-[-0.055em] text-[#adcaff]">
+              Checklist
             </h1>
-            <p className="mt-4 max-w-2xl text-xl font-light leading-snug text-ink/72">
-              {phase.fieldRule}
+            <p className="mt-2 text-xl leading-snug text-white/58">
+              Execute. Check. Win.
             </p>
           </div>
           <div className="sm:text-right">
-            <div className="font-sans text-4xl tabular-nums">
+            <div className="font-sans text-3xl tabular-nums text-white">
               {complete}
-              <span className="text-ink/30">/{total}</span>
+              <span className="text-white/45">/{total}</span>
             </div>
             <button
               onClick={onRead}
-              className="mt-2 font-sans text-sm text-accent underline-offset-4 hover:underline"
+              className="mt-2 font-sans text-sm text-[#adcaff] underline-offset-4 hover:underline"
             >
-              Read the guide
+              Read below
             </button>
           </div>
         </div>
 
-        <div className="mt-5 h-1.5 overflow-hidden rounded-none bg-ink/10">
+        <div className="mt-5 h-px overflow-hidden bg-white/20">
           <div
-            className="h-full rounded-none bg-accent transition-all duration-300"
+            className="h-full bg-[#adcaff] transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
 
-        <div className="mt-10 space-y-9">
+        <div className="mt-8 space-y-9">
           {phase.checklists.map((group, gi) => {
             const groupKey = checklistGroupKey(phaseIdx, gi);
             const groupCustomTodos = customTodos[groupKey] ?? [];
@@ -217,19 +217,22 @@ export function HackView({
             const gAll = groupTotal > 0 && gDone === groupTotal;
             return (
               <section key={group.title}>
-                <div className="flex items-baseline justify-between border-b border-ink/15 pb-2">
-                  <h2 className="font-sans text-xs uppercase tracking-[0.25em] text-muted">
+                <div className="flex items-baseline justify-between border-b border-white/20 pb-2">
+                  <h2 className="font-sans text-xl text-[#adcaff]">
                     {group.title}
                   </h2>
                   <span
-                    className={`font-sans text-xs tabular-nums ${
-                      gAll ? "text-accent" : "text-ink/40"
+                    className={`font-sans text-sm tabular-nums ${
+                      gAll ? "text-[#adcaff]" : "text-white/50"
                     }`}
                   >
-                    {gAll ? "done" : `${gDone}/${groupTotal}`}
+                    {gAll ? "done" : `${gDone} / ${groupTotal}`}
                   </span>
                 </div>
-                <ul className="mt-3 space-y-2">
+                <p className="mt-2 max-w-2xl text-sm italic leading-5 text-white/52">
+                  {phase.fieldRule}
+                </p>
+                <ul className="mt-4 space-y-2">
                   {group.items.map((item, ii) => {
                     const itemKey = staticCheckKey(phaseIdx, gi, ii);
                     const checked = !!done[itemKey];
@@ -240,32 +243,32 @@ export function HackView({
                           data-check-key={itemKey}
                           onFocus={() => setFocusedCheckIndex(itemIndex)}
                           onClick={() => onToggle(itemKey)}
-                          className={`flex w-full items-center gap-4 rounded-none border px-4 py-4 text-left transition-colors sm:px-5 ${
+                          className={`flex w-full items-center gap-3 border px-3 py-2.5 text-left transition-colors sm:px-4 ${
                             checked
-                              ? "border-accent/20 bg-panel-strong"
-                              : "border-ink/15 bg-panel/55 hover:border-ink/30 hover:bg-panel/80"
+                              ? "border-white/15 bg-[#5b5b5b]"
+                              : "border-white/15 bg-[#1f1f1f] hover:border-white/35 hover:bg-[#292929]"
                           }`}
                         >
                           <span
-                            className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-none border transition-colors ${
+                            className={`flex h-4 w-4 flex-shrink-0 items-center justify-center border transition-colors ${
                               checked
-                                ? "border-accent bg-accent text-page"
-                                : "border-ink/30 bg-page/70"
+                                ? "border-[#adcaff] bg-[#adcaff] text-black"
+                                : "border-white/65 bg-white"
                             }`}
                           >
                             {checked && (
-                              <Check aria-hidden="true" size={15} strokeWidth={3} />
+                              <Check aria-hidden="true" size={11} strokeWidth={3} />
                             )}
                           </span>
                           <span
-                            className={`flex-1 font-sans text-[15px] leading-6 ${
-                              checked ? "text-ink/55" : "text-ink"
+                            className={`flex-1 font-sans text-[13px] leading-5 ${
+                              checked ? "text-white/45 line-through" : "text-white/84"
                             }`}
                           >
                             {item.label}
                           </span>
                           {item.critical && !checked && (
-                            <span className="hidden flex-shrink-0 font-sans text-[10px] uppercase tracking-wider text-accent sm:block">
+                            <span className="hidden flex-shrink-0 font-sans text-[10px] text-[#adcaff] sm:block">
                               critical
                             </span>
                           )}
@@ -281,44 +284,44 @@ export function HackView({
                     return (
                       <li key={todo.id}>
                         <div
-                          className={`flex items-center gap-2 rounded-none border px-4 py-3 transition-colors sm:px-5 ${
+                          className={`flex items-center gap-2 border px-3 py-2.5 transition-colors sm:px-4 ${
                             checked
-                              ? "border-accent/20 bg-panel-strong"
-                              : "border-ink/15 bg-panel/55 hover:border-ink/30 hover:bg-panel/80"
+                              ? "border-white/15 bg-[#5b5b5b]"
+                              : "border-white/15 bg-[#1f1f1f] hover:border-white/35 hover:bg-[#292929]"
                           }`}
                         >
                           <button
                             data-check-key={itemKey}
                             onFocus={() => setFocusedCheckIndex(itemIndex)}
                             onClick={() => onToggle(itemKey)}
-                            className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                            className="flex min-w-0 flex-1 items-center gap-3 text-left"
                           >
                             <span
-                              className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-none border transition-colors ${
+                              className={`flex h-4 w-4 flex-shrink-0 items-center justify-center border transition-colors ${
                                 checked
-                                  ? "border-accent bg-accent text-page"
-                                  : "border-ink/30 bg-page/70"
+                                  ? "border-[#adcaff] bg-[#adcaff] text-black"
+                                  : "border-white/65 bg-white"
                               }`}
                             >
                               {checked && (
-                                <Check aria-hidden="true" size={15} strokeWidth={3} />
+                                <Check aria-hidden="true" size={11} strokeWidth={3} />
                               )}
                             </span>
                             <span
-                              className={`min-w-0 flex-1 font-sans text-[15px] leading-6 ${
-                                checked ? "text-ink/55" : "text-ink"
+                              className={`min-w-0 flex-1 font-sans text-[13px] leading-5 ${
+                                checked ? "text-white/45 line-through" : "text-white/84"
                               }`}
                             >
                               {todo.label}
                             </span>
-                            <span className="hidden flex-shrink-0 font-sans text-[10px] uppercase tracking-wider text-ink/35 sm:block">
+                            <span className="hidden flex-shrink-0 font-sans text-[10px] text-white/35 sm:block">
                               custom
                             </span>
                           </button>
                           <button
                             onClick={() => onRemoveCustomTodo(groupKey, todo.id)}
                             aria-label={`Remove custom todo: ${todo.label}`}
-                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-none text-ink/38 transition-colors hover:bg-ink/7 hover:text-accent"
+                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-white/45 transition-colors hover:bg-white/10 hover:text-[#adcaff]"
                           >
                             <X aria-hidden="true" size={16} />
                           </button>
@@ -337,38 +340,38 @@ export function HackView({
           })}
         </div>
 
-        <div className="mt-10 flex items-center justify-between gap-3 font-sans text-sm">
+        <div className="mt-10 flex items-center justify-between gap-3 border-t border-white/20 pt-5 font-sans text-sm">
           <button
             onClick={onPrev}
             disabled={phaseIdx === 0}
-            className="rounded-none px-3 py-2 text-left text-ink/60 enabled:hover:bg-ink/5 disabled:opacity-30"
+            className="px-3 py-2 text-left text-white/60 enabled:hover:bg-white/10 disabled:opacity-30"
           >
             &lt;- {phaseIdx > 0 ? guide[phaseIdx - 1].title : "Beginning"}
           </button>
           <button
             onClick={onNext}
             disabled={phaseIdx === guide.length - 1}
-            className="rounded-none px-3 py-2 text-right text-ink/60 enabled:hover:bg-ink/5 disabled:opacity-30"
+            className="px-3 py-2 text-right text-white/60 enabled:hover:bg-white/10 disabled:opacity-30"
           >
             {phaseIdx < guide.length - 1 ? guide[phaseIdx + 1].title : "Done"} -&gt;
           </button>
         </div>
       </section>
 
-      <aside className="lg:pt-8">
-        <div className="sticky top-32 space-y-4">
-          <section className="rounded-none border border-ink/15 bg-panel/65 p-5">
-            <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">
+      <aside className="border-x border-white/15 px-5 sm:px-8">
+        <div className="border border-white/15 bg-[#151515] p-5">
+          <section>
+            <p className="font-sans text-[11px] text-white/52">
               Total Progress
             </p>
-            <div className="mt-3 font-sans text-5xl tabular-nums text-ink">
+            <div className="mt-3 font-sans text-4xl tabular-nums text-white">
               {totalDone}
-              <span className="text-2xl text-ink/30">/{totalChecks}</span>
+              <span className="text-2xl text-white/35">/{totalChecks}</span>
             </div>
             <button
               onClick={() => setResetOpen(true)}
               disabled={totalDone === 0 && customCount === 0}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-none border border-ink/15 px-3 py-2.5 font-sans text-sm text-ink/65 transition-colors hover:border-accent/45 hover:text-accent disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-ink/15 disabled:hover:text-ink/65"
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 border border-white/20 px-3 py-2.5 font-sans text-sm text-white/68 transition-colors hover:border-[#adcaff] hover:text-[#adcaff] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-white/20 disabled:hover:text-white/68"
             >
               <Trash2 aria-hidden="true" size={15} />
               Clear checklist state
@@ -421,7 +424,7 @@ function AddCustomTodoForm({
   return (
     <form
       onSubmit={submit}
-      className="mt-3 flex flex-col gap-2 rounded-none border border-dashed border-ink/18 bg-panel/45 p-3 sm:flex-row"
+      className="mt-3 flex flex-col gap-2 border border-dashed border-white/20 bg-[#151515] p-3 sm:flex-row"
     >
       <label className="sr-only" htmlFor={inputId}>
         Add your own check to {groupTitle}
@@ -432,12 +435,12 @@ function AddCustomTodoForm({
         onChange={(event) => setLabel(event.target.value)}
         placeholder="Add your own check for this group"
         maxLength={180}
-        className="min-h-10 flex-1 rounded-none border border-ink/15 bg-panel/70 px-3 font-sans text-sm text-ink outline-none transition-colors placeholder:text-ink/38 focus:border-accent/65 focus:bg-panel-strong"
+        className="min-h-10 flex-1 border border-white/20 bg-black px-3 font-sans text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-[#adcaff] focus:bg-[#171717]"
       />
       <button
         type="submit"
         disabled={label.trim().length === 0}
-        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-none bg-accent px-4 font-sans text-sm font-medium text-page transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-accent"
+        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#adcaff] px-4 font-sans text-sm font-medium text-black transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-[#adcaff]"
       >
         <Plus aria-hidden="true" size={15} />
         Add
@@ -466,30 +469,30 @@ function ResetChecklistDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-page/75 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="reset-checklist-title"
     >
-      <div className="w-full max-w-md rounded-none border border-ink/15 bg-page p-6 shadow-2xl shadow-ink/20">
+      <div className="w-full max-w-md border border-white/20 bg-[#151515] p-6 text-white shadow-2xl shadow-black/60">
         <div className="flex items-start gap-4">
-          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-none bg-accent/12 text-accent">
+          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center bg-[#adcaff]/15 text-[#adcaff]">
             <AlertTriangle aria-hidden="true" size={20} />
           </span>
           <div>
             <h2 id="reset-checklist-title" className="font-sans text-lg font-medium">
               Clear checklist state?
             </h2>
-            <p className="mt-2 font-sans text-sm leading-6 text-ink/68">
+            <p className="mt-2 font-sans text-sm leading-6 text-white/65">
               Choose exactly what to clear in this browser. Built-in guide checks
               stay in the guide either way.
             </p>
-            <dl className="mt-4 grid gap-2 font-sans text-xs text-ink/58">
-              <div className="flex justify-between gap-4 rounded-none bg-panel/70 px-3 py-2">
+            <dl className="mt-4 grid gap-2 font-sans text-xs text-white/58">
+              <div className="flex justify-between gap-4 bg-black px-3 py-2">
                 <dt>Completed progress</dt>
                 <dd className="tabular-nums">{progressLabel}</dd>
               </div>
-              <div className="flex justify-between gap-4 rounded-none bg-panel/70 px-3 py-2">
+              <div className="flex justify-between gap-4 bg-black px-3 py-2">
                 <dt>Your added todos</dt>
                 <dd className="tabular-nums">{customLabel}</dd>
               </div>
@@ -499,21 +502,21 @@ function ResetChecklistDialog({
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             onClick={onCancel}
-            className="rounded-none border border-ink/15 px-4 py-2.5 font-sans text-sm text-ink/70 transition-colors hover:bg-ink/5"
+            className="border border-white/20 px-4 py-2.5 font-sans text-sm text-white/75 transition-colors hover:bg-white/10"
           >
             Keep everything
           </button>
           <button
             onClick={onResetProgress}
             disabled={completedCount === 0}
-            className="rounded-none border border-ink/15 px-4 py-2.5 font-sans text-sm text-ink/70 transition-colors hover:border-accent/45 hover:text-accent disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-ink/15 disabled:hover:text-ink/70"
+            className="border border-white/20 px-4 py-2.5 font-sans text-sm text-white/75 transition-colors hover:border-[#adcaff] hover:text-[#adcaff] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-white/20 disabled:hover:text-white/75"
           >
             Clear completed checks only
           </button>
           <button
             onClick={onResetProgressAndCustomTodos}
             disabled={completedCount === 0 && customTodoCount === 0}
-            className="rounded-none bg-accent px-4 py-2.5 font-sans text-sm font-medium text-page transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-accent"
+            className="rounded-lg bg-[#adcaff] px-4 py-2.5 font-sans text-sm font-medium text-black transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-[#adcaff]"
           >
             Clear checks and custom todos
           </button>
