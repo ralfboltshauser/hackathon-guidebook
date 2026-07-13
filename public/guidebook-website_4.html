@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guidebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,300;0,400;0,500;0,700;1,300;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --line:#e1e0e0;--accent:#2a36e1;--accent2:#4664fe;--lblue:#a2cdff;
+    --grey:#7f7d7d;--ph:#d9d9d9;--green:#4cd830;--red:#e72525;--hrow:#2a2a2a;--hgrey:#aea5a5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#e9e9ea;font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  #stage{position:relative;width:100%;overflow:hidden;min-height:100vh}
+  .artboard{position:absolute;top:0;left:50%;width:1024px;transform-origin:top center;background:#fff;display:none}
+  .artboard.active{display:block}
+  .artboard.dark{background:#000}
+  .ab{position:absolute;margin:0;line-height:1.21;white-space:pre-wrap}
+  .ln{position:absolute}
+  .go{cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  #hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(10,10,12,.9);color:#fff;font-size:12px;padding:8px 14px;border-radius:999px;z-index:100;opacity:0;transition:opacity .4s;pointer-events:none}
+  #hint.show{opacity:1}
+  .word{opacity:0;transform:translateY(12px)}
+  .word.show{opacity:1;transform:none;transition:opacity .55s cubic-bezier(.2,.7,.2,1),transform .55s cubic-bezier(.2,.7,.2,1)}
+  .crow{cursor:pointer}
+  @media (prefers-reduced-motion:reduce){.word{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="artboard" data-page="home" style="height:6455px"></div>
+  <div class="artboard" data-page="phases" style="height:4501px"></div>
+  <div class="artboard" data-page="deep-dives" style="height:1300px"></div>
+  <div class="artboard dark" data-page="hack" style="height:900px"></div>
+  <div class="artboard" data-page="skills" style="height:1158px"></div>
+  <div class="artboard" data-page="about" style="height:2223px"></div>
+</div>
+<div id="hint"></div>
+
+<script>
+(function(){
+  "use strict";
+  var Wt={thin:100,light:300,reg:400,med:500,bold:700};
+  function el(tag,cls,style,html){var e=document.createElement(tag);if(cls)e.className=cls;if(style)e.setAttribute("style",style);if(html!=null)e.innerHTML=html;return e;}
+  function add(p,tag,cls,style,html){var e=el(tag,cls,style,html);p.appendChild(e);return e;}
+
+  // text
+  function t(p,x,y,w,size,weight,color,text,o){
+    o=o||{};var s="left:"+x+"px;top:"+y+"px;width:"+w+"px;font-size:"+size+"px;font-weight:"+weight+";color:"+(color||"#000");
+    if(o.it)s+=";font-style:italic";
+    if(o.al)s+=";text-align:"+o.al;
+    if(o.lh!=null)s+=";line-height:"+o.lh;
+    var e=add(p,"div","ab"+(o.cls?" "+o.cls:""),s,text);
+    if(o.go){e.classList.add("go");e.setAttribute("data-go",o.go);}
+    return e;
+  }
+  // rect
+  function r(p,x,y,w,h,o){
+    o=o||{};var s="left:"+x+"px;top:"+y+"px;width:"+w+"px;height:"+h+"px";
+    if(o.fill)s+=";background:"+o.fill;
+    if(o.stroke)s+=";border:"+(o.sw||1)+"px solid "+o.stroke;
+    if(o.cr!=null)s+=";border-radius:"+o.cr+"px";
+    if(o.extra)s+=";"+o.extra;
+    var e=add(p,"div","ln"+(o.cls?" "+o.cls:""),s);
+    if(o.go){e.classList.add("go");e.setAttribute("data-go",o.go);}
+    return e;
+  }
+  function hl(p,x,y,w,c){return add(p,"div","ln","left:"+x+"px;top:"+y+"px;width:"+w+"px;height:1px;background:"+(c||"var(--line)"));}
+  function vl(p,x,y,h,c){return add(p,"div","ln","left:"+x+"px;top:"+y+"px;width:1px;height:"+h+"px;background:"+(c||"var(--line)"));}
+  function diag(p,x,y,w,h,c,sw){var d=add(p,"div","ln","left:"+x+"px;top:"+y+"px;width:"+(w||1)+"px;height:"+(h||1)+"px");d.innerHTML='<svg width="'+(w||1)+'" height="'+(h||1)+'" style="overflow:visible;display:block"><line x1="0" y1="0" x2="'+(w||0)+'" y2="'+(h||0)+'" stroke="'+c+'" stroke-width="'+(sw||1)+'"/></svg>';return d;}
+  function vpath(p,x,y,w,h,d,c,sw){var e=add(p,"div","ln","left:"+x+"px;top:"+y+"px;width:"+w+"px;height:"+h+"px");e.innerHTML='<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="overflow:visible;display:block"><path d="'+d+'" fill="none" stroke="'+c+'" stroke-width="'+(sw||1)+'" stroke-linecap="round"/></svg>';return e;}
+  // hexagon (flat-top)
+  function hex(p,x,y,w,h,fill){return add(p,"div","ln","left:"+x+"px;top:"+y+"px;width:"+w+"px;height:"+h+"px;background:"+fill+";clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)");}
+  // arrow glyph (line + chevron) pointing right
+  function arw(p,x,y,w,c){var d=add(p,"div","ln","left:"+x+"px;top:"+(y-4)+"px;width:"+(w+2)+"px;height:10px");d.innerHTML='<svg width="'+(w+2)+'" height="10" style="overflow:visible;display:block"><line x1="0" y1="5" x2="'+w+'" y2="5" stroke="'+c+'" stroke-width="1.5"/><polyline points="'+(w-6)+',1 '+w+',5 '+(w-6)+',9" fill="none" stroke="'+c+'" stroke-width="1.5"/></svg>';return d;}
+
+  /* shared nav (exact) */
+  function nav(b,dark){
+    var stroke=dark?"#fff":"#000",ink=dark?"#fff":"#000",fill=dark?"#000":"#fff";
+    r(b,0,0,1024,53,{fill:fill,stroke:stroke,sw:1});
+    t(b,23,17,300,13,Wt.reg,ink,"Our very cool logo + name",{go:"home"});
+    t(b,720,21,68,13,Wt.reg,ink,"Hack",{go:"hack"});
+    t(b,787,21,44,13,Wt.reg,ink,"Skills",{go:"skills"});
+    t(b,851,21,83,13,Wt.reg,ink,"Deep Dives",{go:"deep-dives"});
+    t(b,954,21,55,13,Wt.reg,ink,"About",{go:"about"});
+  }
+
+  /* ===================== HOME ===================== */
+  function home(b){
+    nav(b);
+    t(b,21,218,104,12,Wt.reg,"var(--accent2)","001");
+    t(b,853,192,131,47,Wt.reg,"#000","Name",{lh:1});
+    // hero grid lines
+    vl(b,248,77,503); vl(b,512,187,559); hl(b,14,279,779); hl(b,159,475,846);
+    t(b,18,314,80,12,Wt.reg,"#000","available now");
+    t(b,291,358,210,47,Wt.reg,"#000","Structure",{cls:"word",lh:1}); b.lastChild.style.setProperty("--i","0");
+    t(b,404,404,101,47,Wt.reg,"#000","your",{cls:"word",lh:1}); b.lastChild.style.setProperty("--i","1");
+    t(b,523,478,205,47,Wt.reg,"#000",'<span style="color:var(--accent)">thinking</span>.',{cls:"word",lh:1}); b.lastChild.style.setProperty("--i","2");
+    t(b,862,561,113,12,Wt.reg,"#000","read the playbook");
+
+    // two hero cards
+    r(b,22,888,388,340,{fill:"rgba(162,205,255,.42)",cr:10});
+    t(b,43,907,351,47,Wt.reg,"#000","Making winning as easy as possible",{lh:1.05});
+    t(b,47,1157,351,20,Wt.reg,"#000","Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam");
+    r(b,436,888,569,428,{fill:"#fff",stroke:"#000",sw:1,cr:10});
+    r(b,467,946,137,72,{fill:"var(--accent)",cr:20,extra:"display:flex;align-items:center;justify-content:center"}).appendChild(el("div","","position:static;color:#fff;font-size:24px","Problem"));
+
+    // Read the Playbook button (accent)
+    var rb=r(b,24,1242,386,74,{fill:"var(--accent)",cr:10,go:"phases",extra:"display:flex;align-items:center;padding:0 24px"});
+    add(rb,"div","","position:static;color:#fff;font-size:20px","Read the Playbook");
+    arw(rb,344,37,29,"#fff"); rb.lastChild.style.position="absolute"; rb.lastChild.style.left="344px"; rb.lastChild.style.top="33px";
+
+    // product row
+    var pim=[[20,1342],[190,1342],[352,1341],[514,1340],[676,1339],[838,1338]];
+    var ppr=[[78,1355],[248,1356],[415,1352],[582,1354],[749,1351],[916,1352]];
+    for(var i=0;i<6;i++){ r(b,pim[i][0],pim[i][1],46,46,{fill:"var(--ph)"}); t(b,ppr[i][0],ppr[i][1],73,13,Wt.bold,"#000","2.500 CHF"); }
+
+    // Problem
+    r(b,38,1612,72,24,{fill:"var(--accent)",cr:10,extra:"display:flex;align-items:center;justify-content:center"}).appendChild(el("div","","position:static;color:#fff;font-size:12px","Problem"));
+    t(b,217,1746,624,24,Wt.reg,"#000","The output standard of hackathons is low. There is a huge knowledge arbitrage in experience and knowing what it takes.");
+    hl(b,103,1837,830); vl(b,202,1710,178);
+
+    // Solution
+    r(b,40,2161,72,26,{fill:"var(--accent)",cr:10,extra:"display:flex;align-items:center;justify-content:center"}).appendChild(el("div","","position:static;color:#fff;font-size:12px","Solution"));
+    var hxs=[[216,2202],[100,2206],[275,2300],[160,2303],[106,2397],[216,2397]];
+    hxs.forEach(function(p){ hex(b,p[0],p[1],119,113,"rgba(162,205,255,.42)"); });
+    t(b,402,2229,365,24,Wt.reg,"#000",'Our playbook guides \nyou step by step to the <span style="color:var(--accent)">win</span>.');
+    t(b,455,2325,405,24,Wt.reg,"#000",'Deep Dives from industry <span style="color:var(--accent)">experts</span> let you explore proven processes.');
+    t(b,402,2428,365,24,Wt.reg,"#000",'Skills import all the <span style="color:var(--accent)">knowledge</span> into your agent.');
+    hl(b,725,2254,260); vl(b,985,2186,336); hl(b,850,2352,135); hl(b,757,2453,228);
+
+    // feature card (ruled grid + text)
+    vl(b,36,2634,552); hl(b,-3,2754,1025); hl(b,-1,3186,1025); hl(b,-2,3311,1025);
+    t(b,63,2764,792,24,Wt.reg,"#7f7d7d",'<span style="color:var(--accent)">Hackathons are just problems. </span>\nYou solve them with focus and system. Find out why you fail and \nread the playbook.');
+
+    // 20+ Deep Dives
+    t(b,70,3640,300,24,Wt.reg,"#7f7d7d",'<span style="color:var(--accent)">20+ Deep Dives</span>\nJust so you don\u2019t make the same mistakes as everyone else. Tested workflows by domain experts. Now in our Deep Dives section.',{lh:1.3});
+    var stk=[[665,3543],[613,3596],[561,3649],[509,3702],[457,3755]];
+    stk.forEach(function(p){ r(b,p[0],p[1],243,255,{fill:"#fff",stroke:"#000",sw:1,cr:10}); });
+    t(b,768,4010,232,24,Wt.thin,"#000","Read the Deep Dives",{go:"deep-dives"}); arw(b,750,4019,12,"#000");
+
+    hl(b,-14,4080,1025);
+
+    // ===== phase cards =====
+    // Phase 1
+    r(b,47,4140,451,384,{fill:"#fff",stroke:"#000",sw:1,cr:10});
+    t(b,73,4167,300,24,Wt.reg,"var(--accent)","Phase 1");
+    t(b,73,4209,407,15,Wt.reg,"#000",loremLong(),{lh:1.35});
+    r(b,73,4311,127,25,{fill:"var(--ph)",cr:10}); r(b,73,4362,127,25,{fill:"var(--ph)",cr:10}); r(b,73,4413,127,25,{fill:"var(--ph)",cr:10});
+    var ap=r(b,73,4469,401,38,{fill:"var(--accent)",cr:10,go:"skills",extra:"display:flex;align-items:center;padding:0 16px"});
+    add(ap,"div","","position:static;color:#fff;font-size:15px","Access Phase 1 Skills"); arw(ap,340,19,43,"#fff"); ap.lastChild.style.left="340px"; ap.lastChild.style.top="15px";
+    // Phase 2,3
+    r(b,522,4140,463,186,{fill:"#fff",stroke:"#000",sw:1,cr:10});
+    t(b,535,4234,200,24,Wt.reg,"var(--accent)","Phase 2");
+    t(b,535,4275,421,15,Wt.reg,"#000","Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut");
+    r(b,522,4338,463,186,{fill:"#fff",stroke:"#000",sw:1,cr:10});
+    t(b,535,4420,200,24,Wt.reg,"var(--accent)","Phase 3");
+    t(b,535,4461,421,15,Wt.reg,"#000","Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut");
+    // Phase 4 (white card + blue subbutton)
+    r(b,47,4541,938,186,{fill:"#fff",stroke:"#000",sw:1,cr:10});
+    t(b,73,4572,300,24,Wt.reg,"var(--accent)","Phase 4");
+    t(b,73,4627,407,15,Wt.reg,"#000",loremLong(),{lh:1.35});
+    var p4=r(b,678,4572,270,123,{fill:"var(--accent)",cr:10,go:"phases",extra:"padding:33px 14px 0"});
+    add(p4,"div","","position:static;color:#fff;font-size:24px;line-height:1.15","Read \nthe playbook"); arw(p4,197,62,43,"#fff"); p4.lastChild.style.left="197px"; p4.lastChild.style.top="58px";
+    // Phase 5,6
+    r(b,47,4755,451,261,{fill:"#fff",stroke:"#000",sw:1,cr:10});
+    t(b,73,4799,200,24,Wt.reg,"var(--accent)","Phase 5");
+    t(b,73,4853,185,15,Wt.reg,"#000",loremLong(),{lh:1.35}); t(b,280,4853,185,15,Wt.reg,"#000",loremLong2(),{lh:1.35});
+    r(b,522,4754,451,261,{fill:"#fff",stroke:"#000",sw:1,cr:10});
+    t(b,549,4799,200,24,Wt.reg,"var(--accent)","Phase 6");
+    t(b,549,4853,185,15,Wt.reg,"#000",loremLong(),{lh:1.35}); t(b,756,4853,185,15,Wt.reg,"#000",loremLong2(),{lh:1.35});
+
+    hl(b,-1,5068,1025);
+
+    // stats
+    r(b,42,5250,116,39,{fill:"var(--accent)",cr:10,extra:"display:flex;align-items:center;justify-content:center"}).appendChild(el("div","","position:static;color:#fff;font-size:20px","Why us?"));
+    r(b,58,5350,223,227,{fill:"#fff",stroke:"#000",sw:1,cr:10}); t(b,75,5389,179,64,Wt.reg,"var(--accent)","10k+",{lh:1}); t(b,75,5503,179,15,Wt.reg,"#000","euros won in Hackathon prize money");
+    r(b,406,5350,223,227,{fill:"#fff",stroke:"#000",sw:1,cr:10}); t(b,432,5389,179,64,Wt.reg,"var(--accent)","xy",{lh:1}); t(b,428,5503,179,15,Wt.reg,"#000","Partners from institutions across Europe");
+    r(b,760,5349,223,227,{fill:"#fff",stroke:"#000",sw:1,cr:10}); t(b,786,5401,179,64,Wt.reg,"var(--accent)","7x",{lh:1}); t(b,786,5502,179,15,Wt.reg,"#000","times pordium placement");
+
+    // CTA
+    hl(b,1,5834,1025); hl(b,0,6097,1025);
+    t(b,47,5881,585,36,Wt.reg,"#000",'Start <span style="color:var(--accent)">learning</span> \nand win your next hackathon.',{lh:1.05});
+    var pbk=r(b,47,6015,140,46,{fill:"#fff",stroke:"#000",sw:1,cr:10,go:"phases",extra:"display:flex;align-items:center;padding:0 16px"});
+    add(pbk,"div","","position:static;font-size:20px;font-weight:300","Playbook"); arw(pbk,105,23,16,"#000"); pbk.lastChild.style.left="105px"; pbk.lastChild.style.top="19px";
+    var ddb=r(b,202,6015,158,46,{fill:"#fff",stroke:"#000",sw:1,cr:10,go:"deep-dives",extra:"display:flex;align-items:center;padding:0 16px"});
+    add(ddb,"div","","position:static;font-size:20px;font-weight:300","Deep Dives"); arw(ddb,120,23,16,"#000"); ddb.lastChild.style.left="120px"; ddb.lastChild.style.top="19px";
+    t(b,421,6214,96,24,Wt.reg,"#000","FOOTER");
+  }
+  function loremLong(){return "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et";}
+  function loremLong2(){return "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et";}
+
+  /* ===================== PHASES ===================== */
+  function phases(b){
+    nav(b);
+    vl(b,36,53,2622); vl(b,982,53,2622); hl(b,3,84,1021); hl(b,0,1448,1021);
+    t(b,52,95,104,12,Wt.reg,"var(--accent2)","002");
+    t(b,370,214,319,48,Wt.reg,"#000","The 6 Phases");
+    // problem: pill
+    r(b,65,328,100,35,{fill:"var(--accent)",cr:10,extra:"display:flex;align-items:center;padding-left:18px"}).appendChild(el("div","","position:static;color:#fff;font-size:15px","Problem:"));
+    // phase 1 vectors (exact bezier paths)
+    vpath(b,80,367,391,209,"M 0 0 C 90.148 184.838 325.129 34.460 381.75 8.731","#000",1);
+    vpath(b,485,454,234,238,"M 0 54.550 C 0 54.550 121.491 -28.257 135.876 10.177 C 150.261 48.613 53.041 196.874 53.041 196.874","#000",1);
+    t(b,478,482,163,24,Wt.reg,"#000","Phase 1");
+    t(b,313,672,395,32,Wt.reg,"var(--accent)","01 Before the Hackathon");
+    t(b,45,728,918,16,Wt.reg,"#000","This assumes you want to win hackathons. If not, fair enough, this is not for you. Every single step you skip decreases your odds. Almost all of preparation comes down to one thing: eliminate all avoidable disadvantages before the hackathon starts.",{lh:1.35});
+
+    var items=[
+      {y0:833,x:0,code:"01.01",title:"Understand the hack environment",sub:"Before you can make good decisions, understand the physical and operational constraints of the event.",
+        exec:"Map the basics: location, duration, food, sleep setup, overnight rules, transport, submission deadlines, and any multi-stage structure.\n\nIdentify the parts that will affect energy and focus, because these constraints shape the quality of every later decision.",
+        avoid:"Discovering the sleep, food, location, or deadline constraints only after the event starts."},
+      {y0:1147,x:1,code:"01.02",title:"Get the right team",sub:"A small team with the right coverage beats a larger team with unclear ownership.",
+        exec:"Aim for 2-4 people with the roles covered: at least two people who can build, one person with strong design/product judgment, and one strong pitcher.\n\nRoles can overlap, but do not leave a core role uncovered and do not fill the team with people who only contribute ideas.",
+        avoid:"Adding people who are not aligned with how you work.\n\nTeams with too many 'idea people'."},
+      {y0:1448,x:1,code:"01.03",title:"Align on the goal",sub:"This system only works if everyone is honestly playing the same game.",
+        exec:"Make the goal explicit before the event: everyone must be down to win, not vaguely interested in learning, networking, or having a relaxed weekend.\n\nIf people want different outcomes, decide that early instead of discovering it when the hard tradeoffs start.",
+        avoid:"Assuming everyone has the same ambition because they joined the team."},
+      {y0:1735,x:1,code:"01.04",title:"Capacity commitments",sub:"Uneven commitment creates bad dynamics faster than skill gaps do.",
+        exec:"Everyone should commit the same amount of capacity, preferably all in: same seriousness, same availability, same willingness to do the uncomfortable work.\n\nThis is not about skills, it is about presence. Avoid a team where some people go all the way while others split focus or show up only when it is convenient.",
+        avoid:"A team where some go all the way and others don't.\n\nUnclear expectations about sleep, effort, ownership, or side activities."},
+      {y0:2045,x:1,code:"01.05",title:"Build domain knowledge, not the product",sub:"If the challenge direction is already known, learn the domain before the event instead of guessing your way through it.",
+        exec:"When the direction of the challenges is known, build domain knowledge or get access to experts who can explain the real constraints, users, and failure modes.\n\nDo not start building. It is often against the rules, and the first conversations at the hackathon can invalidate most pre-built assumptions.",
+        avoid:"Pre-building the final solution against the rules.\n\nConfusing early domain learning with already knowing the right product."},
+      {y0:2355,x:1,code:"01.06",title:"Arrive early and secure a strong workplace",sub:"A poor workspace taxes every conversation, build session, and rehearsal for the rest of the event.",
+        exec:"Arrive early and claim a place that supports focused work: quiet enough, enough space for discussions, enough power, and close enough to the people you need to talk to.\n\nBring whatever makes the workspace actually usable, such as chargers, adapters, monitors, headphones, and sleep gear if the event runs overnight.",
+        avoid:"Starting the hack from the leftover seats with bad power, noise, or no room to think."}
+    ];
+    items.forEach(function(it){
+      var y=it.y0, sx=it.x?122:119, ex=it.x?131:119, px=it.x?131:119, ax=it.x?604:589, apx=it.x?604:592;
+      hl(b,-3,y,1021); hl(b,-3,y+41,1021);
+      t(b,62,y+11,42,16,Wt.reg,"var(--accent)",it.code);
+      t(b,119,y+11,448,16,Wt.reg,"#000",it.title);
+      t(b,sx,y+49,526,16,Wt.light,"var(--grey)",it.sub,{lh:1.3});
+      pill(b,px,y+99,80,"Execute","var(--green)");
+      t(b,ex,y+135,448,16,Wt.light,"#000",it.exec,{lh:1.3});
+      pill(b,apx,y+99,76,"Avoid","var(--red)");
+      t(b,ax,y+135,372,16,Wt.light,"#000",it.avoid,{lh:1.3});
+    });
+    hl(b,-9,2675,1021); // closing rule under 01.06
+
+    // core objective
+    r(b,62,2703,892,96,{fill:"rgba(234,233,233,.15)",stroke:"#000",sw:1,cr:10});
+    t(b,83,2719,159,16,Wt.light,"var(--accent)","Core objective");
+    t(b,115,2751,681,20,Wt.light,"#000","\u201C Eliminate all avoidable disadvantages before the hackathon starts.\u201D",{it:true});
+    var oc=r(b,782,2731,152,51,{fill:"var(--accent)",stroke:"#fff",sw:1,cr:10,go:"hack",extra:"display:flex;align-items:center;padding:0 16px"});
+    add(oc,"div","","position:static;color:#fff;font-size:15px","Open Checklist"); arw(oc,118,25,12,"#fff"); oc.lastChild.style.left="118px"; oc.lastChild.style.top="21px";
+
+    // phase 2 vectors (exact bezier paths)
+    vpath(b,318,2815,122,98,"M 69.809 0 C -41.710 51.024 -12.087 91.663 105.341 51.833","#000",1);
+    vpath(b,490,2814,262,262,"M 0 118.124 C 0 118.124 166.323 -14.712 176.635 1.347 C 195.527 30.768 81.591 121.741 20.037 192.169","#000",1);
+    t(b,431,2884,163,24,Wt.reg,"#000","Phase 2");
+    t(b,329,2987,332,32,Wt.reg,"var(--accent)","02 Start");
+    t(b,36,3047,918,16,Wt.reg,"#000","This assumes you want to win hackathons. If not, fair enough, this is not for you. Every single step you skip decreases your odds. Almost all of preparation comes down to one thing: eliminate all avoidable disadvantages before the hackathon starts.",{lh:1.35});
+
+    // footer
+    r(b,1,4080,1020,421,{fill:"var(--ph)"});
+    t(b,451,4291,96,24,Wt.reg,"#000","FOOTER");
+  }
+  function pill(b,x,y,w,label,dot){
+    var p=r(b,x,y,w,25,{fill:"#fff",stroke:"#000",sw:.5,cr:30,extra:"display:flex;align-items:center;gap:7px;padding-left:11px"});
+    add(p,"div","","position:static;width:9px;height:9px;border-radius:50%;background:"+dot);
+    add(p,"div","","position:static;font-size:13px;color:#000",label);
+  }
+
+  /* ===================== DEEP DIVES ===================== */
+  function deep(b){
+    nav(b);
+    // grid lines
+    vl(b,23,85,1025); hl(b,23,109,932); hl(b,23,359,932); vl(b,502,91,328); vl(b,502,490,332); hl(b,23,823,932); hl(b,502,647,464); vl(b,880,91,328);
+    t(b,38,89,104,12,Wt.reg,"var(--accent2)","003");
+    t(b,39,281,530,64,Wt.reg,"var(--accent)","Deep Dives",{lh:1});
+    t(b,39,368,470,24,Wt.reg,"#000","proven workflows from industry experts");
+    // filter pills
+    r(b,39,436,66,28,{fill:"#fff",stroke:"#000",sw:1,cr:20});
+    r(b,127,436,146,28,{fill:"#fff",stroke:"#000",sw:1,cr:20}); t(b,159,441,120,15,Wt.med,"#000","Kategorie 1");
+    r(b,294,436,215,28,{fill:"#fff",stroke:"#000",sw:1,cr:20}); t(b,365,441,120,15,Wt.med,"#000","Kategorie 2");
+    r(b,525,436,85,28,{fill:"#fff",stroke:"#000",sw:1,cr:20}); t(b,537,443,80,11,Wt.med,"#000","Kategorie 3");
+    r(b,626,436,85,28,{fill:"#fff",stroke:"#000",sw:1,cr:20});
+    r(b,787,436,215,28,{fill:"#fff",stroke:"#000",sw:1,cr:20}); t(b,799,441,80,15,Wt.med,"#000","Suche");
+    // card thumbnails (image placeholders) + card texts
+    r(b,46,518,344,194,{fill:"var(--ph)"});
+    t(b,643,539,359,24,Wt.reg,"#000","All about Github");
+    t(b,607,577,359,15,Wt.thin,"#000","Lukas Strickler - professioneller Yapper");
+    t(b,587,695,359,24,Wt.reg,"#000","All about husky precommit");
+    t(b,587,745,359,15,Wt.thin,"#000","Ralf Boltshauser - versteht mehr als Bahnhof");
+    r(b,46,728,84,21,{fill:"var(--ph)"});
+    t(b,46,753,359,24,Wt.reg,"#000","How to create videos with AI");
+    t(b,46,790,359,15,Wt.thin,"#000","Felix Grote - spherecast (YC S24)");
+    // become contributor buttons
+    [39,226,413,600,787].forEach(function(x){ var e=r(b,x,842,155,42,{fill:"var(--accent)",cr:10,extra:"display:flex;align-items:center;justify-content:center"}); add(e,"div","","position:static;color:#fff;font-size:13px","Become a contributor"); });
+    // hover-card demo (below the frame)
+    t(b,55,1031,309,32,Wt.reg,"#000","Hover Card Design");
+    var hc=r(b,55,1088,167,178,{fill:"#fff",stroke:"var(--line)",sw:1,cr:10});
+    t(hc,12,10,150,14,Wt.light,"var(--accent)","How to build the right team");
+    hl(hc,0,50,167);
+    t(hc,12,56,150,11,Wt.reg,"#000","A deep dive by: \nxy Professor at the University of Mannheim",{lh:1.25});
+    r(hc,12,102,147,70,{fill:"var(--ph)"});
+    t(hc,55,118,90,10,Wt.reg,"#000","Visualisierung des Textanfangs");
+    hc.style.transition="transform .25s cubic-bezier(.2,.7,.2,1),box-shadow .25s";
+    hc.addEventListener("mouseenter",function(){hc.style.transform="translateY(-6px)";hc.style.boxShadow="0 20px 50px rgba(10,10,20,.12)";});
+    hc.addEventListener("mouseleave",function(){hc.style.transform="";hc.style.boxShadow="";});
+  }
+
+  /* ===================== HACK (black) ===================== */
+  function hack(b){
+    nav(b,true);
+    t(b,23,71,104,12,Wt.reg,"var(--lblue)","004");
+    t(b,20,96,600,48,Wt.reg,"var(--lblue)","Checklist",{lh:1});
+    t(b,20,166,544,36,Wt.reg,"var(--hgrey)","Execute. Check. Win.",{lh:1});
+    t(b,873,175,142,24,Wt.reg,"var(--lblue)","Read below",{al:"right"});
+    hl(b,0,244,1015,"#ffffff");
+    t(b,54,272,200,36,Wt.reg,"var(--lblue)","Before",{lh:1});
+    var counter=t(b,873,281,145,36,Wt.reg,"#fff","0 / 10",{al:"right",lh:1});
+    t(b,54,322,500,20,Wt.reg,"var(--hgrey)","Preparation is for removing avoidable disadvantages, not for pre-building the solution.",{it:true});
+    var rows=[{y:383,on:false},{y:446,on:true},{y:509,on:false},{y:571,on:false}];
+    var done=0;
+    rows.forEach(function(rw){
+      var row=r(b,56,rw.y,817,41,{fill:"var(--hrow)",stroke:"var(--grey)",sw:1,cls:"crow"});
+      var cb=el("div","","position:absolute;left:7px;top:8px;width:25px;height:25px;background:#fff;display:flex;align-items:center;justify-content:center",'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M4 12l6 6L20 5"/></svg>');
+      cb.querySelector("svg").style.opacity="0";
+      row.appendChild(cb);
+      add(row,"div","","position:absolute;left:53px;top:0;height:41px;display:flex;align-items:center;font-size:15px;color:#fff","Team size is 2-4 people");
+      function setState(on){ if(on){row.style.background="var(--grey)";cb.style.background="var(--lblue)";cb.querySelector("svg").style.opacity="1";cb.querySelector("svg").setAttribute("stroke","#000");row.dataset.on="1";} else {row.style.background="var(--hrow)";cb.style.background="#fff";cb.querySelector("svg").style.opacity="0";row.dataset.on="";} }
+      setState(rw.on);
+      row.addEventListener("click",function(){ var willOn=row.dataset.on!=="1"; setState(willOn); recount(); });
+      row.setAttribute("tabindex","0");
+      row.addEventListener("keydown",function(e){if(e.key===" "||e.key==="Enter"){e.preventDefault();row.click();}});
+    });
+    function recount(){ var n=0; b.querySelectorAll(".crow").forEach(function(rr){if(rr.dataset.on==="1")n++;}); counter.textContent=n+" / 10"; }
+    // initial display stays "0 / 10" per the design's label
+    t(b,54,778,200,36,Wt.reg,"var(--lblue)","Start",{lh:1});
+  }
+
+  /* ===================== SKILLS ===================== */
+  function skills(b){
+    nav(b);
+    r(b,0,53,1021,493,{fill:"var(--accent)"});
+    r(b,0,618,1021,540,{fill:"var(--accent)"});
+    vpath(b,579,173,317,342,"M 256.196 139.171 C 213.746 72.980 -39.938 -141.719 5.403 146.293 M 275.706 205.351 C 206.132 148.252 134.136 154.072 81.212 196.242","#ffffff",1);
+    vpath(b,146,104,438,433,"M 115.815 0 C -28.188 251.143 -16.091 290.355 35.525 319.952 C 87.142 349.549 230.364 249.541 312.600 123.208","#ffffff",1);
+    t(b,15,71,104,12,Wt.reg,"#fff","005");
+    t(b,394,121,300,48,Wt.light,"#fff","Skills:",{lh:1});
+    t(b,497,180,300,48,Wt.light,"#fff","knowledge",{lh:1});
+    t(b,324,236,300,48,Wt.light,"#fff","imported",{lh:1});
+    t(b,497,296,300,48,Wt.light,"#fff","into",{lh:1});
+    t(b,406,342,300,48,Wt.light,"#fff","your",{lh:1});
+    t(b,497,402,300,48,Wt.light,"#fff","agent",{lh:1});
+    var tags=[[23,165,"Brainstorming"],[215,165,"Code Review"],[396,249,"Product management"],[666,169,"Mental health"],[848,169,"Politics"],[953,169,"Idk"]];
+    tags.forEach(function(g){ t(b,g[0],566,g[1],24,Wt.reg,"#000",g[2]); });
+    t(b,23,653,300,40,Wt.reg,"#fff","Catalogue");
+    r(b,23,730,66,28,{fill:"#fff",cr:20});
+    r(b,111,730,146,28,{fill:"#fff",cr:20});
+    r(b,278,730,215,28,{fill:"#fff",cr:20});
+    r(b,509,730,85,28,{fill:"#fff",cr:20});
+    r(b,610,730,85,28,{fill:"#fff",cr:20});
+    r(b,771,730,215,28,{fill:"#fff",cr:20}); t(b,790,735,80,15,Wt.reg,"#000","Suche");
+    t(b,22,785,415,24,Wt.reg,"#fff","Strategy & Ideation",{it:true});
+    t(b,22,820,471,13,Wt.reg,"#fff","Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam");
+    [23,264,521,768].forEach(function(x){ r(b,x,881,201,263,{fill:"var(--ph)"}); });
+  }
+
+  /* ===================== ABOUT ===================== */
+  function about(b){
+    nav(b);
+    t(b,23,71,104,12,Wt.reg,"var(--accent2)","005");
+    t(b,784,65,530,48,Wt.reg,"#000","Our Story");
+    hl(b,-3,131,1023);
+    r(b,0,164,729,295,{fill:"var(--ph)"}); t(b,291,293,200,36,Wt.reg,"#000","Picture 1");
+    t(b,734,412,271,20,Wt.reg,"#000","Picture\ndescription");
+    t(b,291,589,430,36,Wt.reg,"#000","Story goodboys");
+    vl(b,729,131,677);
+    r(b,292,808,729,295,{fill:"var(--ph)"}); t(b,559,912,200,36,Wt.reg,"#000","Picture 2");
+    t(b,180,1055,180,20,Wt.reg,"#000","Picture\ndescription");
+    t(b,328,1242,430,36,Wt.reg,"#000","Story St Gallen");
+    vl(b,291,808,677);
+    r(b,0,1479,729,295,{fill:"var(--ph)"}); t(b,253,1607,200,36,Wt.reg,"#000","Picture 3");
+    t(b,291,1956,500,36,Wt.reg,"#000","Story Q Hack + Release");
+    vl(b,729,1485,738);
+  }
+
+  /* build */
+  var boards={};
+  document.querySelectorAll(".artboard").forEach(function(b){boards[b.dataset.page]=b;});
+  home(boards.home); phases(boards.phases); deep(boards["deep-dives"]); hack(boards.hack); skills(boards.skills); about(boards.about);
+
+  /* router + scaler */
+  var stage=document.getElementById("stage");
+  var order=["home","phases","deep-dives","hack","skills","about"];
+  function route(){return (location.hash.replace(/^#\//,"")||"home");}
+  function activePage(){return boards[route()]?route():"home";}
+  function fit(){var b=boards[activePage()];var sc=stage.clientWidth/1024;b.style.transform="translateX(-50%) scale("+sc+")";stage.style.height=((parseInt(b.style.height,10)||1000)*sc)+"px";}
+  function show(){var p=activePage();order.forEach(function(k){boards[k].classList.toggle("active",k===p);});window.scrollTo(0,0);fit();if(p==="home")playHero();}
+  window.addEventListener("hashchange",show);
+  window.addEventListener("resize",fit);
+  document.addEventListener("click",function(e){var g=e.target.closest("[data-go]");if(g)location.hash="#/"+g.getAttribute("data-go");});
+  function playHero(){boards.home.querySelectorAll(".word").forEach(function(w){w.classList.remove("show");var i=parseInt(w.style.getPropertyValue("--i"))||0;setTimeout(function(){w.classList.add("show");},(i===2)?640:i*150+120);});}
+  (function(){if(window.innerWidth<1080){var h=document.getElementById("hint");h.textContent="1:1 artboard — scaled to fit";h.classList.add("show");setTimeout(function(){h.classList.remove("show");},3000);}})();
+  show();
+})();
+</script>
+</body>
+</html>
