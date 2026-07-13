@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guidebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,300;0,400;0,500;0,700;1,300;1,400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div id="stage">
+  <div class="artboard" data-page="home" style="height:6455px"></div>
+  <div class="artboard" data-page="phases" style="height:4501px"></div>
+  <div class="artboard" data-page="deep-dives" style="height:1300px"></div>
+  <div class="artboard dark" data-page="hack" style="height:900px"></div>
+  <div class="artboard" data-page="skills" style="height:1158px"></div>
+  <div class="artboard" data-page="about" style="height:2223px"></div>
+</div>
+<div id="hint"></div>
+
+<!-- shared drawing primitives + nav -->
+<script src="js/helpers.js"></script>
+<!-- one file per page -->
+<script src="js/pages/home.js"></script>
+<script src="js/pages/phases.js"></script>
+<script src="js/pages/deep-dives.js"></script>
+<script src="js/pages/hack.js"></script>
+<script src="js/pages/skills.js"></script>
+<script src="js/pages/about.js"></script>
+<!-- build + router + scaler (must load last) -->
+<script src="js/app.js"></script>
+</body>
+</html>
