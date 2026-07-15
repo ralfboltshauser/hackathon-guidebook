@@ -1,3 +1,10 @@
 [mcp_servers.agentation]
 command = "npx"
 args = [ "-y", "agentation-mcp", "server" ]
+
+# PostHog analytics ("Pulse Talk"), project 220518 — query pageviews, errors, HogQL, etc.
+# Codex speaks stdio, so bridge the remote HTTP MCP with mcp-remote (browser login on first use).
+# Parity with Claude Code's .mcp.json.
+[mcp_servers.posthog]
+command = "npx"
+args = [ "-y", "mcp-remote@latest", "https://mcp.posthog.com/mcp" ]

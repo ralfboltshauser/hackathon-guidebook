@@ -7,18 +7,25 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "duplication": "jscpd --config jscpd.config.json",
-    "check": "pnpm lint && pnpm duplication && pnpm build"
+    "event-lint": "node scripts/event-lint.mjs",
+    "event-lint:test": "node scripts/event-lint.test.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm event-lint && pnpm event-lint:test && pnpm duplication && pnpm build"
+  },
+  "engines": {
+    "node": "^20.20.0 || >=22.22.0"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.9",
+    "@posthog/nextjs-config": "^1.9.68",
     "@types/mdx": "^2.0.14",
-    "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.42.0",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
+    "posthog-js": "^1.399.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zustand": "^5.0.14"
@@ -31,7 +38,6 @@
     "agentation": "^3.0.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "jscpd": "^5.0.11",
     "jscpd": "^5.0.11",
     "tailwindcss": "^4",
     "typescript": "^5"

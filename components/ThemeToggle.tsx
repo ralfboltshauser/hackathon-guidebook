@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 
 type Theme = "dark" | "light";
 
@@ -39,6 +40,7 @@ export function ThemeToggle() {
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
 
+    void track("theme_toggled", { theme: nextTheme });
     setTheme(nextTheme);
     applyTheme(nextTheme);
     window.localStorage.setItem("hackathon-guidebook-theme", nextTheme);

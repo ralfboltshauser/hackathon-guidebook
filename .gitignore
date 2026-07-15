@@ -32,12 +32,22 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but the committed template is safe (no secrets) and documents required vars.
+!.env.example
 
 # vercel
 .vercel
 
-# local agent tooling
-.claude/
+# local agent tooling. Skills live canonically in .agents/skills/ (tracked); each agent's fixed
+# skills path is a committed symlink to it. Other per-agent state stays local.
+.agents/*
+!.agents/skills
+.claude/*
+!.claude/skills
+.cursor/*
+!.cursor/skills
+.opencode/*
+!.opencode/skills
 .codex/*
 !.codex/
 !.codex/config.toml

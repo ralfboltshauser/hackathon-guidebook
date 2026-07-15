@@ -3,3 +3,32 @@
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+# Analytics — cookieless PostHog ("Pulse Talk")
+
+Cookieless-by-default PostHog (EU, project `220518`): page opens, session duration, web vitals,
+heatmaps, error tracking, and typed product events. No cookie banner.
+
+- **Full docs:** [`docs/analytics.md`](./docs/analytics.md)
+- **The port (edit only here):** `lib/analytics/` — add events to `events.ts`, fire via `track()`
+  (`import { track } from "@/lib/analytics"`), or add `data-cta="label"` for automatic CTA tracking.
+- **Invariants — do NOT change** in `lib/analytics/client.ts`: `autocapture:false`,
+  `persistence:'memory'`, `cookieless_mode:'always'`, session replay off. **No PII** in event names or
+  property keys (enforced by `pnpm event-lint`); URL/referrer/heatmap PII is stripped in `beforeSend`.
+
+# Skills & tooling (works with any agent)
+
+Skills live canonically in **`.agents/skills/<name>/SKILL.md`** (open Agent Skills standard). Each
+agent's fixed skills path is a committed symlink to it — `.claude/skills`, `.cursor/skills`, and
+`.opencode/skills` all resolve to `.agents/skills` — so there is one source of truth and no drift.
+Read the `SKILL.md` and follow it, whichever agent you are.
+
+- **`.agents/skills/pulse/`** — fetch & analyze PostHog data; add new tracking.
+- **`.agents/skills/resolve-pr-comments/`** — triage & resolve PR review comments. Bundled scripts
+  (plain bash, any agent): `pr-threads.sh` (list threads + IDs), `pr-resolve.sh` (reply + resolve).
+- **PostHog MCP** — query project `220518` directly. Claude Code (`.mcp.json`) and Codex
+  (`.codex/config.toml`) both point at `https://mcp.posthog.com/mcp` (log in on first use).
+
+# Quality gate
+
+Run before pushing: **`pnpm check`** = `lint` + `typecheck` + `event-lint` (+ its self-test) + duplicate-check + `build`.
