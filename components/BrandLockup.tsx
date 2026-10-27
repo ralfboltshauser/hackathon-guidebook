@@ -18,15 +18,6 @@ export function BrandLockup({ children }: BrandLockupProps) {
         >
           Ralf Boltshauser
         </a>
-        {" and "}
-        <a
-          href="https://www.linkedin.com/in/konrad-te-heesen-bb2876280/"
-          target="_blank"
-          rel="noreferrer"
-          className="text-ink/50 underline-offset-4 transition-colors hover:text-ink/75 hover:underline"
-        >
-          Konrad te Heesen
-        </a>
       </span>
     </div>
   );

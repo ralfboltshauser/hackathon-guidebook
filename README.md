@@ -10,9 +10,7 @@ The thing most teams get wrong: they think winning is about who builds the most.
 
 Six phases: Before, Start, During, Final Hours, Pitch, After. Each has a guide (Learn tab) and a checklist (Hack tab).
 
-The site also has a Deep Dives section for longer draft articles on specific
-topics such as pitching, teaser videos, demo reliability, challenge selection,
-team roles, and post-hackathon follow-up.
+The Deep Dives section is coming soon.
 
 ## Who this is for
 
@@ -48,18 +46,6 @@ The site runs cookieless PostHog (no cookie banner): page opens, session duratio
 web vitals, heatmaps, error tracking, and typed product events. See
 [`docs/analytics.md`](./docs/analytics.md) for the setup, taxonomy, and how to add events, and
 [`docs/analytics-production.md`](./docs/analytics-production.md) for the production setup.
-
-## Content architecture
-
-Deep-dive article bodies live in `content/deep-dives/<slug>/index.md` or
-`index.mdx`.
-
-Metadata is intentionally centralized in `lib/deep-dives.ts` instead of
-frontmatter. The registry powers the library page, article pages, sitemap,
-metadata, related articles, and generated OG images.
-
-Use `.md` for plain prose and `.mdx` when an article needs React components from
-`components/deep-dives/mdx`.
 
 ## Who this is from
 
