@@ -1,6 +1,6 @@
 # Contributing
 
-This project is a Next.js App Router site with local MD/MDX content.
+This project is a Next.js App Router site.
 
 ## Local setup
 
@@ -21,21 +21,12 @@ pnpm check
 
 - `app/` contains route segments and route-specific UI.
 - `components/` contains reusable client and UI components.
-- `content/deep-dives/` contains article bodies as `.md` or `.mdx`.
 - `lib/` contains shared metadata, registries, and route-independent helpers.
 - `mdx-components.tsx` contains global markdown element styling.
 
 ## Deep dives
 
-Deep-dive metadata is registry-driven, not frontmatter-driven.
-
-To add a deep dive:
-
-1. Add `content/deep-dives/<slug>/index.md` or `index.mdx`.
-2. Add an entry in `lib/deep-dives.ts`.
-3. Run `pnpm check`.
-
-Use `.md` for plain writing. Use `.mdx` only when the article needs React guide blocks from `components/deep-dives/mdx`.
+The `/deep-dives` page is a coming-soon placeholder. There are no published articles.
 
 ## Metadata and OG images
 
@@ -44,9 +35,7 @@ Site constants live in `lib/site.ts`.
 Deep-dive metadata lives in `lib/deep-dives.ts` and is consumed by:
 
 - `app/deep-dives/page.tsx`
-- `app/deep-dives/[slug]/page.tsx`
 - `app/deep-dives/opengraph-image.tsx`
-- `app/deep-dives/[slug]/opengraph-image.tsx`
 
 Shared OG image primitives live in `lib/og-image.tsx`.
 
